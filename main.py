@@ -16,13 +16,13 @@ def main():
     # user = db_sess.query(User).filter(User.username == 'danil').first()
     # db_sess.delete(user)
 
-    user = User()
-    user.name = "данил колбасенко"
-    user.about = "стендофф2"
-    user.username = "danil"
-    user.hashed_password = '123'
-
-    db_sess.add(user)
+    # user = User()
+    # user.name = "данил колбасенко"
+    # user.about = "стендофф2"
+    # user.username = "danil"
+    # user.hashed_password = '123'
+    #
+    # db_sess.add(user)
 
     db_sess.commit()
 
