@@ -14,4 +14,4 @@ class User(SqlAlchemyBase):
                               index=True, unique=True, nullable=False)
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
-                                     default=datetime.datetime.now)
+                                     default=datetime.datetime.now().replace(microsecond=0))
