@@ -1,12 +1,12 @@
 from flask import *
 from db import *
-from data.users import User
 from data import db_session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask import render_template, redirect
 from forms.user import RegisterForm
 from forms.user import LoginForm
 from data.users import User
+from data.communication_models import Chat, Message
 
 
 website = Flask(__name__)
@@ -23,7 +23,7 @@ def home():
         db_sess.query(User).filter(User.username == 'test_1').first()
     ]
 
-    db_sess.close
+    db_sess.close()
     return render_template('home.html', chats=chats)
 
 @website.route('/<username>')
@@ -40,23 +40,34 @@ def profile(username):
     else:
         result = f'Пользователь {username} не найден'
 
-    db_sess.close
+    db_sess.close()
     return result
 
 @website.route('/chat/<username>')
 def chat(username):
     db_sess = db_session.create_session()
+    comm_sess = db_session.create_comm_session()
 
-    messages = [db_sess.query(User).filter(User.username == username).first()]
+    user = db_sess.query(User).filter(User.username == username).first()
+    messages = comm_sess.query(User).filter(Message.user_id == user.id).all()
 
-    db_sess.close
+    db_sess.close()
+    comm_sess.close()
     return render_template('chat.html', username=username, messages=messages)
 
 @website.route('/send_mess/<username>', methods=['GET', 'POST'])
 def send_mess(username):
     db_sess = db_session.create_session()
+    comm_sess = db_session.create_comm_session()
+    if request.method == 'POST':
+        message_text = request.form.get('message')
+        msg = Message(text=message_text, user_id=1, chat_id=1)
+        comm_sess.add(msg)
+        comm_sess.commit()
 
-    message = request.form.get('message')
+    return redirect(f'/chat/{username}')
+    db_sess.close()
+    comm_sess.close()
 
 @website.route('/register', methods=['GET', 'POST'])
 def register():
