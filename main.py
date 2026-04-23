@@ -16,6 +16,7 @@ login_manager.init_app(app)
 
 def main():
     db_session.global_init("db/profiles.db")
+    db_session.comm_global_init("db/communications.db")
     WEB.website.run(port=8080, host='127.0.0.1')
     # app.run()
 
