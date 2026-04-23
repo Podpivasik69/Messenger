@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Чат с {{ username }}</h1>
+
+    <div class="messages">
+        {% for mess in messages %}
+            <div class="mess">
+                {{ mess.username }}:{{ mess.text }}
+                <small>{{ mess.time }}</small>
+            </div>
+        {% endfor %}
+    </div>
+
+    <form method="post" action="/send_mess/{{ username }}">
+        <input type="text" name="message" placeholder="Напечатай что-нибудь...">
+        <button type="submit">Отправить</button>
+    </form>
+
+{% endblock %}
