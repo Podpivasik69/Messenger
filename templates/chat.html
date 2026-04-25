@@ -6,7 +6,8 @@
     <div class="messages">
         {% for mess in messages %}
             <div class="mess">
-                {{ mess.user.username }}:{{ mess.text }}
+                {{ mess.username }}:{{ mess.text }}
+                <br>
                 <small>{{ mess.created_date }}</small>
             </div>
         {% endfor %}
