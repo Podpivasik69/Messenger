@@ -25,7 +25,8 @@ def home():
     #     {'username': 'test_2', 'name': 'Пользователь 2', 'last_message': 'Как дела?'},
     # ]
     chats = [
-        db_sess.query(User).filter(User.username == 'test_1').first()
+        db_sess.query(User).filter(User.username == 'test_1').first(),
+        db_sess.query(User).filter(User.username == 'test_2').first()
     ]
 
     db_sess.close()
@@ -56,8 +57,16 @@ def chat(username):
         user = db_sess.query(User).filter(User.username == username).first()
         messages = comm_sess.query(Message).options(
             joinedload(Message.user)).filter(Message.user_id == 1).all()
+        messages_data = []
+        for msg in messages:
+            messages_data.append({
+                'text': msg.text,
+                'username': user.username,
+                'created_date': msg.created_date.strftime('%Y-%m-%d %H:%M:%S'),
+                'user_id': msg.user_id
+            })
 
-        return render_template('chat.html', username=username, messages=messages)
+        return render_template('chat.html', username=username, messages=messages_data)
 
     finally:
         db_sess.close()
@@ -66,20 +75,6 @@ def chat(username):
 
 @website.route('/send_mess/<username>', methods=['POST'])
 def send_mess(username):
-    # try:
-    #     db_sess = db_session.create_session()
-    #     comm_sess = db_session.create_comm_session()
-    #     if request.method == 'POST':
-    #         message_text = request.form.get('message')
-    #         msg = Message(text=message_text, user_id=1, chat_id=1)
-    #         comm_sess.add(msg)
-    #         comm_sess.commit()
-    #
-    #         return redirect(f'/chat/{username}')
-    # finally:
-    #     db_sess.close()
-    #     comm_sess.close()
-
     comm_sess = None
     try:
         comm_sess = db_session.create_comm_session()
@@ -107,12 +102,12 @@ def register():
     if form.validate_on_submit():
         if form.password.data != form.password_confirm.data:
             return render_template('register.html',
-                                   title='Регистрация', form=form, message='пороли не совпадают')
+                                   title='Регистрация', form=form, message='пароли не совпадают')
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.username == form.username.data).first():
             return render_template('register.html',
                                    title='Регистрация', form=form,
-                                   message='ПОльзователь с таким именнем уже существуеи')
+                                   message='Пользователь с таким именем уже существует')
         user = User()
         user.username = form.username.data
         user.name = form.name.data

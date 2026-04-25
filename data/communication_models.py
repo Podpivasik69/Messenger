@@ -29,7 +29,7 @@ class Message(SqlAlchemyBase):
     text = sqlalchemy.Column(sqlalchemy.String, nullable=False)
 
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
-                                     default=datetime.datetime.now().replace(microsecond=0))
+                                     default=lambda:datetime.datetime.now().replace(microsecond=0))
 
     chat_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("chats.id"))
 
