@@ -7,10 +7,15 @@ from forms.user import RegisterForm
 from forms.user import LoginForm
 from data.users import User
 from data.communication_models import Chat, Message
+from sqlalchemy.orm import joinedload
 
 
 website = Flask(__name__)
 website.config['SECRET_KEY'] = 'ваш-секретный-ключ-здесь'
+
+@website.route('/')
+def index():
+    return redirect('/home')
 
 @website.route('/home')
 def home():
@@ -47,27 +52,54 @@ def profile(username):
 def chat(username):
     db_sess = db_session.create_session()
     comm_sess = db_session.create_comm_session()
+    try:
+        user = db_sess.query(User).filter(User.username == username).first()
+        messages = comm_sess.query(Message).options(
+            joinedload(Message.user)).filter(Message.user_id == 1).all()
 
-    user = db_sess.query(User).filter(User.username == username).first()
-    messages = comm_sess.query(User).filter(Message.user_id == user.id).all()
+        return render_template('chat.html', username=username, messages=messages)
 
-    db_sess.close()
-    comm_sess.close()
-    return render_template('chat.html', username=username, messages=messages)
+    finally:
+        db_sess.close()
+        comm_sess.close()
 
-@website.route('/send_mess/<username>', methods=['GET', 'POST'])
+
+@website.route('/send_mess/<username>', methods=['POST'])
 def send_mess(username):
-    db_sess = db_session.create_session()
-    comm_sess = db_session.create_comm_session()
-    if request.method == 'POST':
+    # try:
+    #     db_sess = db_session.create_session()
+    #     comm_sess = db_session.create_comm_session()
+    #     if request.method == 'POST':
+    #         message_text = request.form.get('message')
+    #         msg = Message(text=message_text, user_id=1, chat_id=1)
+    #         comm_sess.add(msg)
+    #         comm_sess.commit()
+    #
+    #         return redirect(f'/chat/{username}')
+    # finally:
+    #     db_sess.close()
+    #     comm_sess.close()
+
+    comm_sess = None
+    try:
+        comm_sess = db_session.create_comm_session()
         message_text = request.form.get('message')
-        msg = Message(text=message_text, user_id=1, chat_id=1)
-        comm_sess.add(msg)
-        comm_sess.commit()
+        if message_text and message_text.strip():
+            msg = Message(text=message_text.strip(), user_id=1, chat_id=1)
+            comm_sess.add(msg)
+            comm_sess.commit()
+            print(f"✓ Сообщение сохранено: {message_text}")
+    except Exception as e:
+        if comm_sess:
+            comm_sess.rollback()
+        print(f"✗ Ошибка: {e}")
+    finally:
+        if comm_sess:
+            comm_sess.close()
+            print("Сессия закрыта")
 
     return redirect(f'/chat/{username}')
-    db_sess.close()
-    comm_sess.close()
+
 
 @website.route('/register', methods=['GET', 'POST'])
 def register():
