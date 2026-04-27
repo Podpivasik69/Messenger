@@ -10,8 +10,11 @@ from data.communication_models import Chat, Message
 from sqlalchemy.orm import joinedload
 
 
+
 website = Flask(__name__)
 website.config['SECRET_KEY'] = 'ваш-секретный-ключ-здесь'
+login_manager = LoginManager()
+login_manager.init_app(website)
 
 @website.route('/')
 def index():
@@ -25,8 +28,8 @@ def home():
     #     {'username': 'test_2', 'name': 'Пользователь 2', 'last_message': 'Как дела?'},
     # ]
     chats = [
-        db_sess.query(User).filter(User.username == 'test_1').first(),
-        db_sess.query(User).filter(User.username == 'test_2').first()
+        db_sess.query(User).filter(User.username == 'mixas').first(),
+        db_sess.query(User).filter(User.username == 'mixa2').first()
     ]
 
     db_sess.close()
@@ -96,18 +99,23 @@ def send_mess(username):
     return redirect(f'/chat/{username}')
 
 
+@login_manager.user_loader
+def load_user(user_id):
+    session = db_session.create_session()
+    return session.get(User, user_id)
+
 @website.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
         if form.password.data != form.password_confirm.data:
             return render_template('register.html',
-                                   title='Регистрация', form=form, message='пароли не совпадают')
+                                   title='Регистрация', form=form, message='пороли не совпадают')
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.username == form.username.data).first():
             return render_template('register.html',
                                    title='Регистрация', form=form,
-                                   message='Пользователь с таким именем уже существует')
+                                   message='ПОльзователь с таким именнем уже существуеи')
         user = User()
         user.username = form.username.data
         user.name = form.name.data
@@ -119,6 +127,7 @@ def register():
 
     return render_template('register.html', title='Регистрация', form=form)
 
+
 @website.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -127,8 +136,17 @@ def login():
         user = db_sess.query(User).filter(User.username == form.username.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            return redirect("/")
+            return redirect("/home")
         return render_template('login.html',
                                message="Неправильный логин или пароль",
                                form=form)
     return render_template('login.html', title='Авторизация', form=form)
+
+
+@website.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect('/login')
+
+
