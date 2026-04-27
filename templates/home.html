@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Мои чаты</h1>
+
+    <div class="chats">
+        {% for chat in chats %}
+            <div class="chat">
+                <a href="/chat/{{ chat.username }}">
+                    <b>{{ chat.name }}</b>
+                </a>
+                <br>
+                <small>{{ chat.last_message }}</small>
+            </div>
+            <hr>
+        {% endfor %}
+    </div>
+{% endblock %}
