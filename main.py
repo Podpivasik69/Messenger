@@ -19,6 +19,7 @@ def load_user(user_id):
 
 
 @app.route('/home')
+@login_required
 def home():
     return 'список чатов'
 
@@ -42,6 +43,7 @@ def profile(username):
 
 
 @app.route('/chat/<username>')
+@login_required
 def chat(username):
     return f'чат с {username}'
 
@@ -69,6 +71,7 @@ def register():
 
     return render_template('register.html', title='Регистрация', form=form)
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -77,11 +80,19 @@ def login():
         user = db_sess.query(User).filter(User.username == form.username.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            return redirect("/")
+            return redirect("/home")
         return render_template('login.html',
                                message="Неправильный логин или пароль",
                                form=form)
     return render_template('login.html', title='Авторизация', form=form)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect('/login')
+
 
 def main():
     db_session.global_init("db/profiles.db")
