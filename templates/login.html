@@ -2,31 +2,38 @@
 
 {% block content %}
 <head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+            crossorigin="anonymous"></script>
     <title>Вход</title>
 </head>
 <body>
-    <h2>Вход в систему</h2>
+<h2>Вход в систему</h2>
 
-    {% if message %}
-        <p style="color: red;">{{ message }}</p>
-    {% endif %}
+{% if message %}
+<p style="color: red;">{{ message }}</p>
+{% endif %}
 
-    <form method="POST">
-        {{ form.hidden_tag() }}
+<form method="POST">
+    {{ form.hidden_tag() }}
 
-        <p>
-            {{ form.username.label }}<br>
-            {{ form.username(size=30) }}
-        </p>
+    <p>
+        {{ form.username.label }}<br>
+        {{ form.username(size=30) }}
+    </p>
 
-        <p>
-            {{ form.password.label }}<br>
-            {{ form.password(size=30) }}
-        </p>
-    </form>
+    <p>
+        {{ form.password.label }}<br>
+        {{ form.password(size=30) }}
 
-    <a href="/register">Нет аккаунта? Зарегистрироваться</a>
+    </p>
+
+    <button type="submit" class="btn btn-error">OIHSDOFH</button>
+
+</form>
+
+<a href="/register">Нет аккаунта? Зарегистрироваться</a>
 </body>
 {% endblock %}
