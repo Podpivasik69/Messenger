@@ -5,7 +5,7 @@ body {
 }
 
 .menu {
-    background-color: #2c2f30;
+    background-color: #4f4f4f;
     padding: 10px;
     margin-bottom: 20px;
     border-radius: 5px;
@@ -19,7 +19,7 @@ body {
 }
 
 .content {
-    background-color: #cccccc;
+    background-color: #b8b8b8;
     padding: 20px;
     border-radius: 5px;
 }
