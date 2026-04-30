@@ -32,23 +32,23 @@ def create_session() -> Session:
 
 
 
-__comm_factory = None
-
-def comm_global_init(db_file):
-    global __comm_factory
-
-    if __comm_factory:
-        return
-
-    conn_str = f'sqlite:///{db_file.strip()}?check_same_thread=False'
-    print(f"Подключение к базе данных по адресу {conn_str}")
-
-    engine = sa.create_engine(conn_str, echo=False, connect_args={'timeout': 30}, poolclass=NullPool)
-    __comm_factory = orm.sessionmaker(bind=engine)
-
-    from . import communication_models
-    SqlAlchemyBase.metadata.create_all(engine)
-
-def create_comm_session() -> Session:
-    global __comm_factory
-    return __comm_factory()
+# __comm_factory = None
+#
+# def comm_global_init(db_file):
+#     global __comm_factory
+#
+#     if __comm_factory:
+#         return
+#
+#     conn_str = f'sqlite:///{db_file.strip()}?check_same_thread=False'
+#     print(f"Подключение к базе данных по адресу {conn_str}")
+#
+#     engine = sa.create_engine(conn_str, echo=False, connect_args={'timeout': 30}, poolclass=NullPool)
+#     __comm_factory = orm.sessionmaker(bind=engine)
+#
+#     from . import communication_models
+#     SqlAlchemyBase.metadata.create_all(engine)
+#
+# def create_comm_session() -> Session:
+#     global __comm_factory
+#     return __comm_factory()
