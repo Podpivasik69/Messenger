@@ -17,25 +17,38 @@ login_manager = LoginManager()
 login_manager.init_app(website)
 
 @website.route('/')
+@login_required
 def index():
     return redirect('/home')
 
 @website.route('/home')
+@login_required
 def home():
     db_sess = db_session.create_session()
-    # chats = [
-    #     {'username': 'test_1', 'name': 'Пользователь 1', 'last_message': 'Привет!'},
-    #     {'username': 'test_2', 'name': 'Пользователь 2', 'last_message': 'Как дела?'},
-    # ]
-    chats = [
-        db_sess.query(User).filter(User.username == 'mixas').first(),
-        db_sess.query(User).filter(User.username == 'mixa2').first()
-    ]
 
+    chats = db_sess.query(Chat).filter((Chat.user1_id==current_user.id) or (Chat.user2_id==current_user.id)).all()
+
+    chats_data = []
+    for chat in chats:
+        if chat.user1_id == current_user.id:
+            companion = db_sess.query(User).get(chat.user2_id)
+        else:
+            companion = db_sess.query(User).get(chat.user1_id)
+
+        last_message = db_sess.query(Message).filter(
+            Message.chat_id == chat.id
+        ).order_by(Message.created_date.desc()).first()
+
+        chats_data.append({
+            'username': companion.username,
+            'name': companion.name,
+            'last_message': last_message.text if last_message else "Нет сообщений"
+        })
     db_sess.close()
-    return render_template('home.html', chats=chats)
+    return render_template('home.html', chats=chats_data)
 
 @website.route('/<username>')
+@login_required
 def profile(username):
     db_sess = db_session.create_session()
 
@@ -53,18 +66,24 @@ def profile(username):
     return result
 
 @website.route('/chat/<username>')
+@login_required
 def chat(username):
     db_sess = db_session.create_session()
-    comm_sess = db_session.create_comm_session()
     try:
         user = db_sess.query(User).filter(User.username == username).first()
-        messages = comm_sess.query(Message).options(
-            joinedload(Message.user)).filter(Message.user_id == 1).all()
+
+        chat = db_sess.query(Chat).filter(
+            ((Chat.user1_id == current_user.id) and (Chat.user2_id == user.id)) or
+            ((Chat.user1_id == user.id) and (Chat.user2_id == current_user.id))).first()
+
+        messages = db_sess.query(Message).options(
+            joinedload(Message.user)).filter(Message.chat_id == chat.id).order_by(Message.created_date).all()
+
         messages_data = []
         for msg in messages:
             messages_data.append({
                 'text': msg.text,
-                'username': user.username,
+                'username': msg.user.username,
                 'created_date': msg.created_date.strftime('%Y-%m-%d %H:%M:%S'),
                 'user_id': msg.user_id
             })
@@ -73,30 +92,66 @@ def chat(username):
 
     finally:
         db_sess.close()
-        comm_sess.close()
 
 
 @website.route('/send_mess/<username>', methods=['POST'])
+@login_required
 def send_mess(username):
-    comm_sess = None
     try:
-        comm_sess = db_session.create_comm_session()
+        db_sess = db_session.create_session()
         message_text = request.form.get('message')
+
+        companion = db_sess.query(User).filter(User.username == username).first()
+
+        chat = db_sess.query(Chat).filter(
+            ((Chat.user1_id == current_user.id) and (Chat.user2_id == companion.id)) or
+            ((Chat.user1_id == companion.id) and (Chat.user2_id == current_user.id))).first()
+
         if message_text and message_text.strip():
-            msg = Message(text=message_text.strip(), user_id=1, chat_id=1)
-            comm_sess.add(msg)
-            comm_sess.commit()
+            msg = Message(text=message_text.strip(), user_id=current_user.id, chat_id=chat.id)
+            db_sess.add(msg)
+            db_sess.commit()
             print(f"✓ Сообщение сохранено: {message_text}")
     except Exception as e:
-        if comm_sess:
-            comm_sess.rollback()
+        if db_sess:
+            db_sess.rollback()
         print(f"✗ Ошибка: {e}")
     finally:
-        if comm_sess:
-            comm_sess.close()
+        if db_sess:
+            db_sess.close()
             print("Сессия закрыта")
 
     return redirect(f'/chat/{username}')
+
+
+@website.route('/create_chat/<username>')
+@login_required
+def create_chat(username):
+    db_sess = db_session.create_session()
+    try:
+        companion = db_sess.query(User).filter(User.username == username).first()
+        if not companion:
+            return "Пользователь не найден", 404
+
+        existing_chat = db_sess.query(Chat).filter(
+            ((Chat.user1_id == current_user.id) and (Chat.user2_id == companion.id)) or
+            ((Chat.user1_id == companion.id) and (Chat.user2_id == current_user.id))
+        ).first()
+
+        if existing_chat:
+            return redirect(f'/chat/{username}')
+
+        chat = Chat(
+            user1_id=current_user.id,
+            user2_id=companion.id,
+            name=f"Чат {current_user.name} и {companion.name}"
+        )
+        db_sess.add(chat)
+        db_sess.commit()
+
+        return redirect(f'/chat/{username}')
+    finally:
+        db_sess.close()
 
 
 @login_manager.user_loader
@@ -140,6 +195,7 @@ def login():
         return render_template('login.html',
                                message="Неправильный логин или пароль",
                                form=form)
+
     return render_template('login.html', title='Авторизация', form=form)
 
 
@@ -148,5 +204,3 @@ def login():
 def logout():
     logout_user()
     return redirect('/login')
-
-
