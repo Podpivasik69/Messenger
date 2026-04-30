@@ -19,14 +19,14 @@ login_manager.init_app(website)
 @website.route('/')
 @login_required
 def index():
-    return redirect('/home')
+    return redirect('/login')
 
 @website.route('/home')
 @login_required
 def home():
     db_sess = db_session.create_session()
 
-    chats = db_sess.query(Chat).filter((Chat.user1_id==current_user.id) or (Chat.user2_id==current_user.id)).all()
+    chats = db_sess.query(Chat).filter((Chat.user1_id==current_user.id) | (Chat.user2_id==current_user.id)).all()
 
     chats_data = []
     for chat in chats:
@@ -55,10 +55,16 @@ def profile(username):
     user = db_sess.query(User).filter(User.username==username).first()
 
     if user:
-        result = f'Профиль @{username}<br>Имя: {user.name}<br>'
-        if user.about:
-            result += f'О себе: {user.about}<br>'
-        result += f'Дата регистрации: {user.created_date}'
+        if user.id == current_user.id:
+            result = f'Это твой профиль!<br>Имя: {user.name}<br>'
+            if user.about:
+                result += f'О себе: {user.about}<br>'
+            result += f'Дата регистрации: {user.created_date}'
+        else:
+            result = f'Профиль @{username}<br>Имя: {user.name}<br>'
+            if user.about:
+                result += f'О себе: {user.about}<br>'
+            result += f'Дата регистрации: {user.created_date}'
     else:
         result = f'Пользователь {username} не найден'
 
@@ -72,9 +78,15 @@ def chat(username):
     try:
         user = db_sess.query(User).filter(User.username == username).first()
 
+        if not user:
+            return "Пользователь не найден", 404
+
         chat = db_sess.query(Chat).filter(
-            ((Chat.user1_id == current_user.id) and (Chat.user2_id == user.id)) or
-            ((Chat.user1_id == user.id) and (Chat.user2_id == current_user.id))).first()
+            ((Chat.user1_id == current_user.id) & (Chat.user2_id == user.id)) |
+            ((Chat.user1_id == user.id) & (Chat.user2_id == current_user.id))).first()
+
+        if not chat:
+            return f"Чат с пользователем {username} не найден. <a href='/create_chat/{username}'>Создать чат?</a>"
 
         messages = db_sess.query(Message).options(
             joinedload(Message.user)).filter(Message.chat_id == chat.id).order_by(Message.created_date).all()
@@ -104,8 +116,8 @@ def send_mess(username):
         companion = db_sess.query(User).filter(User.username == username).first()
 
         chat = db_sess.query(Chat).filter(
-            ((Chat.user1_id == current_user.id) and (Chat.user2_id == companion.id)) or
-            ((Chat.user1_id == companion.id) and (Chat.user2_id == current_user.id))).first()
+            ((Chat.user1_id == current_user.id) & (Chat.user2_id == companion.id)) |
+            ((Chat.user1_id == companion.id) & (Chat.user2_id == current_user.id))).first()
 
         if message_text and message_text.strip():
             msg = Message(text=message_text.strip(), user_id=current_user.id, chat_id=chat.id)
@@ -134,9 +146,16 @@ def create_chat(username):
             return "Пользователь не найден", 404
 
         existing_chat = db_sess.query(Chat).filter(
-            ((Chat.user1_id == current_user.id) and (Chat.user2_id == companion.id)) or
-            ((Chat.user1_id == companion.id) and (Chat.user2_id == current_user.id))
+            ((Chat.user1_id == current_user.id) & (Chat.user2_id == companion.id)) |
+            ((Chat.user1_id == companion.id) & (Chat.user2_id == current_user.id))
         ).first()
+
+        print(f"Поиск чата: user1={current_user.id}, user2={companion.id}")
+        print(f"Найден существующий чат: {existing_chat}")
+
+        if existing_chat:
+            print(f"Чат уже существует, перенаправляю на /chat/{username}")
+            return redirect(f'/chat/{username}')
 
         if existing_chat:
             return redirect(f'/chat/{username}')
