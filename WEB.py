@@ -56,7 +56,7 @@ def profile(username):
 
     if user:
         if user.id == current_user.id:
-            result = f'Это твой профиль!<br>Имя: {user.name}<br>'
+            result = f'Это твой профиль: @{user.username}<br>Имя: {user.name}<br>'
             if user.about:
                 result += f'О себе: {user.about}<br>'
             result += f'Дата регистрации: {user.created_date}'
@@ -86,7 +86,7 @@ def chat(username):
             ((Chat.user1_id == user.id) & (Chat.user2_id == current_user.id))).first()
 
         if not chat:
-            return f"Чат с пользователем {username} не найден. <a href='/create_chat/{username}'>Создать чат?</a>"
+            return redirect(f'/create_chat/{username}')
 
         messages = db_sess.query(Message).options(
             joinedload(Message.user)).filter(Message.chat_id == chat.id).order_by(Message.created_date).all()
@@ -96,11 +96,11 @@ def chat(username):
             messages_data.append({
                 'text': msg.text,
                 'username': msg.user.username,
-                'created_date': msg.created_date.strftime('%Y-%m-%d %H:%M:%S'),
+                'created_date': msg.created_date.strftime('%m-%d | %H:%M:%S'),
                 'user_id': msg.user_id
             })
 
-        return render_template('chat.html', username=username, messages=messages_data)
+        return render_template('chat.html', user=user, messages=messages_data)
 
     finally:
         db_sess.close()
