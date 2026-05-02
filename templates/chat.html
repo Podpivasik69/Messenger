@@ -1,23 +1,52 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Чат с {{ username }}</h1>
+    <h1>Чат с {{ user.username }}</h1>
 
     <div class="messages">
         {% for mess in messages %}
-            <div class="mess">
-                {{ mess.username }}:{{ mess.text }}
-                <br>
-                <small>{{ mess.created_date }}</small>
-            </div>
+            {% if mess.user_id == user.id %}
+                <div class="mess_incoming">
+                    <small style="color: #5a9bd4; font-weight: 500; text-align: left;">{{ mess.username }}</small>
+                    {{ mess.text }}
+                    <br>
+                    <small>{{ mess.created_date }}</small>
+                </div>
+            {% else %}
+                <div class="mess_outcoming ">
+                    <small style="color: #1a1a1a; font-weight: 500;">{{ mess.username }}</small>
+                    {{ mess.text }}
+                    <br>
+                    <small>{{ mess.created_date }}</small>
+                </div>
+            {% endif %}
         {% endfor %}
     </div>
 
     <div id="bottom"></div>
 
-    <form method="post" action="/send_mess/{{ username }}">
-        <input type="text" name="message" placeholder="Напечатай что-нибудь...">
+    <form method="post" action="/send_mess/{{ user.username }}">
+        <textarea name="message" placeholder="Напечатай что-нибудь..." autofocus rows="1"></textarea>
         <button type="submit">Отправить</button>
     </form>
+
+    <script>
+        window.onload = function() {
+            var messages = document.querySelector('.messages');
+            if (messages) {
+                messages.scrollTop = messages.scrollHeight;
+            }
+        };
+    </script>
+
+    <script>
+        var textarea = document.querySelector('textarea[name="message"]');
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+                e.preventDefault();
+                this.form.submit();
+            }
+        });
+    </script>
 
 {% endblock %}
