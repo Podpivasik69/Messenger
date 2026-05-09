@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            <span class="avatar-text">{{ user.name[0] | upper }}</span>
+        </div>
+        <div class="profile-info">
+            <h1 class="profile-name">{{ user.name }}</h1>
+            <span class="profile-username">@{{ user.username }}</span>
+        </div>
+    </div>
+
+    {% if user.about %}
+    <div class="profile-section">
+        <h3 class="section-title">О себе</h3>
+        <p class="profile-bio">{{ user.about }}</p>
+    </div>
+    {% endif %}
+
+    <div class="profile-section">
+        <h3 class="section-title">Информация</h3>
+        <div class="info-item">
+            <span class="info-label">Дата регистрации</span>
+            <span class="info-value">{{ user.created_date.strftime('%d.%m.%Y') }}</span>
+        </div>
+    </div>
+
+    <div class="profile-actions">
+        {% if user.id == current_user.id %}
+            <button class="btn-edit-profile" onclick="alert('Редактирование профиля')">
+                ✎ Редактировать профиль
+            </button>
+            <a href="/logout" class="btn-logout">Выйти</a>
+        {% else %}
+            <a href="/chat/{{ user.username }}" class="btn-message">
+                ✉ Написать сообщение
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
