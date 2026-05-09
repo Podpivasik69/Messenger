@@ -8,7 +8,17 @@
 </head>
 <body>
     <div class="menu">
-        <a href="/home">Чаты</a>
+        <a href="/home" class="menu-icon-btn" title="Чаты">
+            <img src="{{ url_for('static', filename='home.png') }}" alt="Чаты" class="menu-icon-img">
+        </a>
+
+        <a href="/search" class="menu-icon-btn" title="Поиск">
+            <img src="{{ url_for('static', filename='find.png') }}" alt="Поиск" class="menu-icon-img">
+        </a>
+
+        <a href="/{{ current_user.username }}" class="menu-icon-btn" title="Профиль">
+            <img src="{{ url_for('static', filename='profile.png') }}" alt="Профиль" class="menu-icon-img">
+        </a>
     </div>
 
     <div class="content">

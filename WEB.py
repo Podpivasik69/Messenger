@@ -214,3 +214,8 @@ def login():
 def logout():
     logout_user()
     return redirect('/login')
+
+@website.route('/search')
+@login_required
+def search():
+    return 'ПОИСК'
