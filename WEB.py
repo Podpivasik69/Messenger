@@ -17,7 +17,6 @@ login_manager = LoginManager()
 login_manager.init_app(website)
 
 @website.route('/')
-@login_required
 def index():
     return redirect('/login')
 
@@ -47,29 +46,21 @@ def home():
     db_sess.close()
     return render_template('home.html', chats=chats_data)
 
+
 @website.route('/<username>')
 @login_required
 def profile(username):
     db_sess = db_session.create_session()
 
-    user = db_sess.query(User).filter(User.username==username).first()
+    user = db_sess.query(User).filter(User.username == username).first()
 
-    if user:
-        if user.id == current_user.id:
-            result = f'Это твой профиль: @{user.username}<br>Имя: {user.name}<br>'
-            if user.about:
-                result += f'О себе: {user.about}<br>'
-            result += f'Дата регистрации: {user.created_date}'
-        else:
-            result = f'Профиль @{username}<br>Имя: {user.name}<br>'
-            if user.about:
-                result += f'О себе: {user.about}<br>'
-            result += f'Дата регистрации: {user.created_date}'
-    else:
-        result = f'Пользователь {username} не найден'
+    if not user:
+        db_sess.close()
+        return "Пользователь не найден", 404
 
     db_sess.close()
-    return result
+    return render_template('profile.html', user=user)
+
 
 @website.route('/chat/<username>')
 @login_required
