@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Мои чаты</h1>
+
+<div class="chats">
+    {% for chat in chats %}
+    <div class="chat" data-chat-id="{{ chat.chat_id }}">
+        <a href="/chat/{{ chat.username }}">
+            <b>{{ chat.name }} | @{{ chat.username }}</b>
+            <br>
+            <small class="last-msg">{{ chat.last_message }}</small>
+        </a>
+    </div>
+    <hr>
+    {% endfor %}
+</div>
+
+<input type="hidden" id="current_user_id" value="{{ current_user.id }}">
+
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<script>
+    const socket = io();
+    const currentUserId = document.getElementById('current_user_id').value;
+    const chatsContainer = document.querySelector('.chats');
+
+    socket.on('new_chat', (data) => {
+        const chatDiv = document.createElement('div');
+        chatDiv.className = 'chat';
+        chatDiv.setAttribute('data-chat-id', data.chat_id);
+        chatDiv.innerHTML = `
+            <a href="/chat/${data.username}">
+                <b>${data.name} | @${data.username}</b>
+                <br>
+                <small class="last-msg">${data.last_message}</small>
+            </a>
+            <hr>
+        `;
+        if (chatsContainer.firstChild) {
+            chatsContainer.insertBefore(chatDiv, chatsContainer.firstChild);
+        } else {
+            chatsContainer.appendChild(chatDiv);
+        }
+    });
+
+    socket.on('update_last_message', (data) => {
+        const chatElem = document.querySelector(`.chat[data-chat-id="${data.chat_id}"]`);
+        if (chatElem) {
+            const lastMsgElem = chatElem.querySelector('.last-msg');
+            if (lastMsgElem) {
+                lastMsgElem.textContent = data.text;
+            }
+            const parent = chatElem.parentNode;
+            parent.insertBefore(chatElem, parent.firstChild);
+        }
+    });
+    console.log('update_last_message:', data);
+</script>
+
+
+{% endblock %}

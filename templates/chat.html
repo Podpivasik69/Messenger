@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Чат с {{ user.username }}</h1>
+
+<div class="messages">
+
+    {% for mess in messages %}
+    <div class="{{ 'mess_incoming' if mess.user_id == user.id else 'mess_outcoming' }}"
+         data-message-id="{{ mess.id }}">
+        <small style="color: {{ '#5a9bd4' if mess.user_id == user.id else '#1a1a1a' }}; font-weight: 500;">
+            {{ mess.username }}
+        </small>
+        <span class="message-text">{{ mess.text }}</span>
+        {% if mess.edited %}<small class="edited-mark">(ред.)</small>{% endif %}
+        <br>
+        <small class="message-date">{{ mess.created_date }}</small>
+        {% if mess.user_id == current_user.id %}
+        <div class="msg-actions">
+            <button type="button" class="btn-edit-msg" title="Редактировать">✎</button>
+            <button type="button" class="btn-delete-msg" title="Удалить">✕</button>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<input type="hidden" id="chat_id" value="{{ chat_id }}">
+<input type="hidden" id="current_user_id" value="{{ current_user.id }}">
+
+<div id="bottom"></div>
+
+<!--шляпа статуса печатника -->
+<div id="typingIndicator"
+     style="display:none; padding:4px 10px; font-size:0.9rem; color:#888; font-style:italic;"></div>
+
+<form method="post" action="/send_mess/{{ user.username }}">
+    <textarea name="message" placeholder="Напечатай что-нибудь..." autofocus rows="1"></textarea>
+    <button type="submit">Отправить</button>
+</form>
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<!--<script>-->
+<!--    window.onload = function () {-->
+<!--        var messages = document.querySelector('.messages');-->
+<!--        if (messages) {-->
+<!--            messages.scrollTop = messages.scrollHeight;-->
+<!--        }-->
+<!--    };-->
+<!--</script>-->
+
+<!--<script>-->
+<!--    var textarea = document.querySelector('textarea[name="message"]');-->
+<!--    textarea.addEventListener('keydown', function (e) {-->
+<!--        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {-->
+<!--            e.preventDefault();-->
+<!--            this.form.submit();-->
+<!--        }-->
+<!--    });-->
+<!--</script>-->
+
+<script>
+    let typingTimer;
+    const typingIndicator = document.getElementById('typingIndicator');
+    const socket = io();
+    const chatId = document.getElementById('chat_id').value;
+    const currentUserId = parseInt(document.getElementById('current_user_id').value);
+    const messagesDiv = document.querySelector('.messages');
+    const form = document.querySelector('form[action*="/send_mess/"]');
+    const textarea = form.querySelector('textarea[name="message"]');
+
+    function renderMessage(data) {
+        const isMy = data.user_id === currentUserId;
+        const cls = isMy ? 'mess_outcoming' : 'mess_incoming';
+        const color = isMy ? '#1a1a1a' : '#5a9bd4';
+
+        // шлак который лагает
+        const actions = isMy ? `<div class="msg-actions">
+        <button type="button" class="btn-edit-msg" title="Редактировать">✎</button>
+        <button type="button" class="btn-delete-msg" title="Удалить">✕</button>
+        </div>` : '';
+
+        const editedMark = data.edited ? '<small class="edited-mark">(ред.)</small>' : '';
+        return `
+        <div class="${cls}" data-message-id="${data.message_id}">
+            <small style="color: ${color}; font-weight: 500;">${data.username}</small>
+            <span class="message-text">${data.text}</span> ${editedMark}
+            <br>
+            <small class="message-date">${data.created_date}</small>
+            ${actions}
+        </div>
+        `;
+    }
+
+    textarea.addEventListener('input', () => {
+        socket.emit('typing_start', {chat_id: chatId});
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            socket.emit('typing_stop', {chat_id: chatId});
+        }, 2000);
+    });
+
+    socket.emit('join', {chat_id: chatId});
+
+
+    socket.on('new_message', (data) => {
+        const msgHTML = renderMessage(data);
+        messagesDiv.insertAdjacentHTML('beforeend', msgHTML);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = textarea.value.trim();
+        if (text) {
+            socket.emit('send_message', {chat_id: chatId, text: text});
+            socket.emit('typing_stop', {chat_id: chatId});
+            clearTimeout(typingTimer);
+            textarea.value = '';
+        }
+    });
+
+
+    textarea.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+            e.preventDefault();
+            form.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    window.onload = function () {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    };
+
+    // messagesDiv.addEventListener('click', (e) => {
+    //     const target = e.target;
+    //     const msgDiv = target.closest('[data-message-id]');
+    //     if (!msgDiv) return;
+    //     const messageId = msgDiv.dataset.messageId;
+    //
+    //     if (target.classList.contains('btn-delete-msg')) {
+    //         if (confirm('Удалить сообщение?')) {
+    //             socket.emit('delete_message', {
+    //                 message_id: messageId,
+    //                 chat_id: chatId
+    //             });
+    //         }
+    //     }
+    //
+    //     // кнопки редактирования и удаления
+    //
+    //     if (target.classList.contains('btn-edit-msg')) {
+    //         const textSpan = msgDiv.querySelector('.message-text');
+    //         const originalText = textSpan.textContent;
+    //         const input = document.createElement('input');
+    //         input.type = 'text';
+    //         input.value = originalText;
+    //         input.style.width = '80%';
+    //         textSpan.replaceWith(input);
+    //         input.focus();
+    //
+    //         const saveEdit = () => {
+    //             const newText = input.value.trim();
+    //             if (newText && newText !== originalText) {
+    //                 socket.emit('edit_message', {
+    //                     message_id: messageId,
+    //                     chat_id: chatId,
+    //                     text: newText
+    //                 });
+    //             } else {
+    //                 input.replaceWith(textSpan);
+    //             }
+    //         };
+    //
+    //         input.addEventListener('keydown', (ev) => {
+    //             if (ev.key === 'Enter') saveEdit();
+    //             else if (ev.key === 'Escape') input.replaceWith(textSpan);
+    //         });
+    //         input.addEventListener('blur', saveEdit);
+    //     }
+    // });
+
+
+    messagesDiv.addEventListener('click', (e) => {
+        const target = e.target;
+        const msgDiv = target.closest('[data-message-id]');
+        if (!msgDiv) return;
+        const messageId = msgDiv.dataset.messageId;
+
+        const deleteBtn = target.closest('.btn-delete-msg');
+        if (deleteBtn) {
+            if (confirm('Удалить сообщение?')) {
+                socket.emit('delete_message', {
+                    message_id: messageId,
+                    chat_id: chatId
+                });
+            }
+            return;
+        }
+
+        const editBtn = target.closest('.btn-edit-msg');
+        if (editBtn) {
+            const textSpan = msgDiv.querySelector('.message-text');
+            const originalText = textSpan.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = originalText;
+            input.style.width = '80%';
+            textSpan.replaceWith(input);
+            input.focus();
+
+            const saveEdit = () => {
+                const newText = input.value.trim();
+                if (newText && newText !== originalText) {
+                    socket.emit('edit_message', {
+                        message_id: messageId,
+                        chat_id: chatId,
+                        text: newText
+                    });
+                    const newSpan = document.createElement('span');
+                    newSpan.className = 'message-text';
+                    newSpan.textContent = newText;
+                    input.replaceWith(newSpan);
+                    if (!msgDiv.querySelector('.edited-mark')) {
+                        const mark = document.createElement('small');
+                        mark.className = 'edited-mark';
+                        mark.textContent = ' (ред.)';
+                        newSpan.after(mark);
+                    }
+                } else {
+                    input.replaceWith(textSpan);
+                }
+            };
+
+            input.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter') {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    saveEdit();
+                } else if (ev.key === 'Escape') {
+                    input.replaceWith(textSpan);
+                }
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (document.body.contains(input)) {
+                        saveEdit();
+                    }
+                }, 100);
+            });
+        }
+    });
+
+
+    // печатка
+    socket.on('user_typing', (data) => {
+        if (data.chat_id === chatId) {
+            typingIndicator.textContent = data.username + ' печатает...';
+            typingIndicator.style.display = 'block';
+        }
+    });
+    socket.on('user_stop_typing', (data) => {
+        if (data.chat_id === chatId) {
+            typingIndicator.textContent = '';
+            typingIndicator.style.display = 'none';
+        }
+    });
+
+    socket.on('message_edited', (data) => {
+        const msgDiv = document.querySelector(`[data-message-id="${data.message_id}"]`);
+        if (msgDiv) {
+            const textSpan = msgDiv.querySelector('.message-text');
+            if (textSpan) textSpan.textContent = data.text;
+            if (!msgDiv.querySelector('.edited-mark')) {
+                const mark = document.createElement('small');
+                mark.className = 'edited-mark';
+                mark.textContent = ' (ред.)';
+                textSpan.after(mark);
+            }
+        }
+    });
+
+    socket.on('message_deleted', (data) => {
+        const msgDiv = document.querySelector(`[data-message-id="${data.message_id}"]`);
+        if (msgDiv) msgDiv.remove();
+    });
+
+</script>
+
+{% endblock %}

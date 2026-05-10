@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<head>
+    <title>Регистрация</title>
+</head>
+<body>
+    <h2>Регистрация в Senger, добро пожаловать!</h2>
+
+    {% if message %}
+        <p style="color: red;">{{ message }}</p>
+    {% endif %}
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <p>
+            {{ form.username.label }}<br>
+            {{ form.username(class="form-control", size=30) }}
+        </p>
+
+        <p>
+            {{ form.name.label }}<br>
+            {{ form.name(class="form-control", size=30) }}
+        </p>
+
+        <p>
+            {{ form.about.label }}<br>
+            {{ form.about(class="form-control", rows=3, cols=30) }}
+        </p>
+
+        <p>
+            {{ form.password.label }}<br>
+            {{ form.password(class="form-control", size=30) }}
+        </p>
+
+        <p>
+            {{ form.password_confirm.label }}<br>
+            {{ form.password_confirm(class="form-control", size=30) }}
+        </p>
+
+        <button type="submit" class="btn btn-success">Зарегистрироваться</button>
+
+    </form>
+
+    <a href="/login">Уже есть аккаунт? Войти</a>
+</body>
+
+
+{% endblock %}

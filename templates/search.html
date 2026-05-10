@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Поиск пользователей</h1>
+
+<div class="search-box">
+    <input type="text" id="searchInput" placeholder="Введите username или имя..." autofocus>
+    <button id="searchBtn">Найти</button>
+</div>
+
+<div id="searchResults" class="results-container">
+</div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const resultsDiv = document.getElementById('searchResults');
+
+    async function performSearch() {
+        const query = searchInput.value.trim();
+        if (!query) {
+            resultsDiv.innerHTML = '';
+            return;
+        }
+        try {
+            const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            const users = await response.json();
+            if (users.length === 0) {
+                resultsDiv.innerHTML = '<p>Никого не найдено</p>';
+                return;
+            }
+            let html = '';
+            users.forEach(user => {
+                html += `
+                    <div class="user-card">
+                        <div>
+                            <strong>${user.name}</strong> @${user.username}
+                            ${user.about ? `<br><small>${user.about}</small>` : ''}
+                        </div>
+                        <a href="/chat/${user.username}" class="btn-message">Написать</a>
+                    </div>
+                `;
+            });
+            resultsDiv.innerHTML = html;
+        } catch (err) {
+            resultsDiv.innerHTML = '<p>Ошибка поиска</p>';
+        }
+    }
+
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') performSearch();
+    });
+</script>
+{% endblock %}
