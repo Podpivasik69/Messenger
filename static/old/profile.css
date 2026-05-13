@@ -1,6 +1,11 @@
+html, body {
+    height: 100%;
+}
+
 .profile-wrapper {
     max-width: 300px;
-    margin: 20px auto;
+    margin: 50px auto 20px auto;
+    height: 90vh;
 }
 
 .profile-card {
@@ -98,7 +103,7 @@
     box-sizing: border-box;
 }
 
-/* Modal */
+
 .modal {
     display: none;
     position: fixed;
