@@ -57,18 +57,6 @@ body {
     box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff;
 }
 
-.messages-list::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    pointer-events: none;
-    z-index: 0;
-}
-
 .message-item {
     margin-bottom: 12px;
     display: flex;
@@ -276,3 +264,36 @@ body {
     font-family: 'MS Sans Serif', Arial, sans-serif;
 }
 
+
+
+/* Кнопки редактирования и удаления сообщений */
+.msg-actions {
+    display: none;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.message-item:hover .msg-actions {
+    display: flex !important;
+}
+
+.btn-edit-msg,
+.btn-delete-msg {
+    background: silver;
+    border: none;
+    border-radius: 0;
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf;
+    box-sizing: border-box;
+    color: #000;
+    cursor: pointer;
+    font-family: 'MS Sans Serif', Arial, sans-serif;
+    font-size: 11px;
+    min-height: 20px;
+    min-width: 20px;
+    padding: 2px 6px;
+}
+
+.btn-edit-msg:active,
+.btn-delete-msg:active {
+    box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px grey;
+}

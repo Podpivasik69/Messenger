@@ -25,6 +25,12 @@
                             <div class="message-username">{{ mess.username }}</div>
                             <div class="message-text">{{ mess.text }}</div>
                             <div class="message-time">{{ mess.created_date }}</div>
+                            {% if mess.user_id != user.id %}
+                            <div class="msg-actions">
+                                <button type="button" class="btn btn-edit-msg" title="Редактировать">✎</button>
+                                <button type="button" class="btn btn-delete-msg" title="Удалить">✕</button>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
@@ -176,39 +182,71 @@
             input.type = 'text';
             input.value = originalText;
             input.style.width = '80%';
+
+            // Скрыть кнопки при редактировании
+            const actions = msgDiv.querySelector('.msg-actions');
+            if (actions) actions.style.display = 'none';
+
             textSpan.replaceWith(input);
             input.focus();
 
+            let saved = false;
+
             const saveEdit = () => {
+                if (saved) return;
+                saved = true;
+
                 const newText = input.value.trim();
+                const newSpan = document.createElement('span');
+                newSpan.className = 'message-text';
+                newSpan.textContent = newText || originalText;
+                input.replaceWith(newSpan);
+
                 if (newText && newText !== originalText) {
                     socket.emit('edit_message', {
                         message_id: messageId,
                         chat_id: chatId,
                         text: newText
                     });
-                } else {
-                    input.replaceWith(textSpan);
+                    if (!msgDiv.querySelector('.edited-mark')) {
+                        const mark = document.createElement('small');
+                        mark.className = 'edited-mark';
+                        mark.textContent = ' (ред.)';
+                        newSpan.after(mark);
+                    }
                 }
+                if (actions) actions.style.display = 'flex';
             };
 
-            input.addEventListener('keydown', (ev) => {
+            const cancelEdit = () => {
+                if (saved) return;
+                saved = true;
+                input.replaceWith(textSpan);
+                if (actions) actions.style.display = 'flex';
+            };
+
+            input.addEventListener('keydown', function (ev) {
                 if (ev.key === 'Enter') {
                     ev.preventDefault();
                     ev.stopPropagation();
+                    input.removeEventListener('blur', onBlur);
                     saveEdit();
                 } else if (ev.key === 'Escape') {
-                    input.replaceWith(textSpan);
+                    ev.preventDefault();
+                    input.removeEventListener('blur', onBlur);
+                    cancelEdit();
                 }
             });
 
-            input.addEventListener('blur', () => {
+            function onBlur() {
                 setTimeout(() => {
                     if (document.body.contains(input)) {
                         saveEdit();
                     }
                 }, 100);
-            });
+            }
+
+            input.addEventListener('blur', onBlur);
         }
     });
 
@@ -236,7 +274,9 @@
                 const mark = document.createElement('small');
                 mark.className = 'edited-mark';
                 mark.textContent = ' (ред.)';
-                textSpan.after(mark);
+                if (textSpan && textSpan.parentNode) {
+                    textSpan.parentNode.insertBefore(mark, textSpan.nextSibling);
+                }
             }
         }
     });
