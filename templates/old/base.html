@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='old/98.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename=current_style + '/style.css') }}">
+</head>
+<body>
+
+<div class="window" style="width: 600px;">
+    <div class="title-bar">
+        <div class="title-bar-text">Senger</div>
+        <div class="title-bar-controls">
+            <button aria-label="Close"></button>
+        </div>
+    </div>
+
+    <div style="margin: 8px 0 8px 0; display: flex; justify-content: center; gap: 50px; flex-wrap: wrap;">
+        <!--        если пользлватель зарегистрирован -->
+        {% if current_user.is_authenticated %}
+        <button onclick="location.href='/home'" class="btn">Home</button>
+        <button onclick="location.href='/search'" class="btn">Search</button>
+        <button onclick="location.href='/{{ current_user.username }}'" class="btn">Profile</button>
+        <button onclick="location.href='/logout'" class="btn">Logout</button>
+        <!--        иначе предлогаем зарегатсья-->
+        {% else %}
+        <button onclick="location.href='/login'" class="btn">Login</button>
+        <button onclick="location.href='/register'" class="btn">Register</button>
+        {% endif %}
+    </div>
+
+
+</div>
+<div class="content">
+    {% block content %}
+    {% endblock %}
+</div>
+
+</body>
+
+</html>

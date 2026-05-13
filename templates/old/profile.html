@@ -1,0 +1,112 @@
+{% extends "old/base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='old/profile.css') }}">
+
+<div class="profile-wrapper">
+    <div class="profile-card">
+        <div class="profile-avatar">
+            {% if user.avatar %}
+            <img src="{{ url_for('static', filename=user.avatar) }}">
+            {% else %}
+            👤
+            {% endif %}
+        </div>
+        <div class="profile-name">{{ user.name }}</div>
+        <div class="profile-username">@{{ user.username }}</div>
+
+        {% if user.about %}
+        <div class="profile-about">{{ user.about }}</div>
+        {% endif %}
+
+        <div class="profile-info">
+            <div class="info-row">
+                <span class="info-label">Дата:</span>
+                <span class="info-value">{{ user.created_date.strftime('%d.%m.%Y') }}</span>
+            </div>
+        </div>
+
+        <div class="profile-buttons">
+            {% if user.id == current_user.id %}
+            <form method="post" action="/upload_avatar" enctype="multipart/form-data" style="margin-bottom: 6px;">
+                <button type="button" class="btn" onclick="this.nextElementSibling.click()">Загрузить фото</button>
+                <input type="file" name="avatar" accept="image/*" onchange="this.form.submit()" style="display: none;">
+            </form>
+
+            <button id="editProfileBtn">✎ Редактировать</button>
+            <a href="/logout">Выход</a>
+            {% else %}
+            <a href="/chat/{{ user.username }}">✉ Написать</a>
+            {% endif %}
+
+            {% if user.id == current_user.id %}
+            <form method="post" action="/set_style">
+                <input type="hidden" name="style" value="{{ 'old' if current_style == 'new' else 'new' }}">
+                <button type="submit">Стиль: {{ 'новый' if current_style == 'old' else 'старый' }}</button>
+            </form>
+            {% endif %}
+
+
+        </div>
+    </div>
+</div>
+
+<div id="editProfileModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-title-bar">
+            <div class="modal-title-text">Редактирование</div>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="post" action="/edit_profile">
+                <div class="form-group">
+                    <label class="form-label">Имя</label>
+                    <input type="text" name="name" class="form-input" value="{{ user.name }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">О себе</label>
+                    <textarea name="about" class="form-textarea">{{ user.about or '' }}</textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" id="cancelBtn" class="btn">Отмена</button>
+                    <button type="submit" class="btn">Сохранить</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('editProfileModal');
+    const editBtn = document.getElementById('editProfileBtn');
+    const closeBtn = document.querySelector('.close-modal');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    if (editBtn) {
+        editBtn.onclick = function () {
+            modal.style.display = 'block';
+        }
+    }
+
+    if (closeBtn) {
+        closeBtn.onclick = function () {
+            modal.style.display = 'none';
+        }
+    }
+
+    if (cancelBtn) {
+        cancelBtn.onclick = function () {
+            modal.style.display = 'none';
+        }
+    }
+
+    window.onclick = function (e) {
+        if (e.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+</script>
+
+{% endblock %}

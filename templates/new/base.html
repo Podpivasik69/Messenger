@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>senger</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='icon3.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename=current_style + '/style.css') }}">
+</head>
+
+
+
+
+<body>
+<div class="menu">
+    <a href="/home" class="menu-icon-btn" title="Чаты">
+        <img src="{{ url_for('static', filename=current_style + '/home.png') }}" alt="Чаты" class="menu-icon-img">
+    </a>
+
+    <a href="/search" class="menu-icon-btn" title="Поиск">
+        <img src="{{ url_for('static', filename=current_style + '/find.png') }}" alt="Поиск" class="menu-icon-img">
+    </a>
+
+    <a href="/{{ current_user.username }}" class="menu-icon-btn" title="Профиль">
+        <img src="{{ url_for('static', filename=current_style + '/profile.png') }}" alt="Профиль" class="menu-icon-img">
+    </a>
+</div>
+
+<div class="content">
+    {% block content %}
+    {% endblock %}
+</div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "new/base.html" %}
 
 {% block content %}
 <div class="profile-container">
@@ -36,6 +36,16 @@
             ✉ Написать сообщение
         </a>
         {% endif %}
+<!--        кнопка смены стиля-->
+        {% if user.id == current_user.id %}
+        <form method="post" action="/set_style" style="display:inline;">
+            <input type="hidden" name="style" value="{{ 'old' if current_style == 'new' else 'new' }}">
+            <button type="submit" class="btn-edit-profile">
+                Переключить на {{ 'старый' if current_style == 'new' else 'новый' }} стиль
+            </button>
+        </form>
+        {% endif %}
+
     </div>
 </div>
 
@@ -67,8 +77,9 @@
         width: 100%;
         height: 100%;
         overflow: auto;
-        background-color: rgba(0,0,0,0.5);
+        background-color: rgba(0, 0, 0, 0.5);
     }
+
     .modal-content {
         background-color: #fff;
         margin: 10% auto;
@@ -77,8 +88,9 @@
         width: 90%;
         max-width: 420px;
         position: relative;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
     }
+
     .close-modal {
         position: absolute;
         right: 15px;
@@ -87,18 +99,22 @@
         cursor: pointer;
         color: #888;
     }
+
     .close-modal:hover {
         color: #333;
     }
+
     .modal-content h2 {
         margin-top: 0;
         font-size: 1.4rem;
     }
+
     .modal-content label {
         display: block;
         margin-top: 12px;
         font-weight: 500;
     }
+
     .modal-content input,
     .modal-content textarea {
         width: 100%;
@@ -110,6 +126,7 @@
         margin-top: 4px;
         box-sizing: border-box;
     }
+
     .btn-save {
         margin-top: 18px;
         padding: 10px 20px;
@@ -120,6 +137,7 @@
         cursor: pointer;
         font-size: 1rem;
     }
+
     .btn-save:hover {
         background: #3a5f8a;
     }

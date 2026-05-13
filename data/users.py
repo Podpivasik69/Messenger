@@ -18,6 +18,9 @@ class User(SqlAlchemyBase, UserMixin):
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.datetime.now().replace(microsecond=0))
 
+    style = sqlalchemy.Column(sqlalchemy.String, default='new') #выбор стиля
+    avatar = sqlalchemy.Column(sqlalchemy.String, nullable=True, default=None)  #аватарка
+
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)
 
