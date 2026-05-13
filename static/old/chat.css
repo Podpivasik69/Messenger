@@ -43,7 +43,6 @@ body {
 }
 
 
-/* Dark green chat area with ICQ-style appearance and texture */
 .messages-list {
     flex: 1;
     overflow-y: auto;
@@ -64,7 +63,6 @@ body {
     z-index: 1;
 }
 
-/* Входящие сообщения - светло-серые */
 .message-incoming {
     justify-content: flex-start;
 }
@@ -79,7 +77,6 @@ body {
     margin-left: 12px;
 }
 
-/* Хвостик для входящих сообщений - слева */
 .message-incoming .message-bubble::before {
     content: '';
     position: absolute;
@@ -99,7 +96,6 @@ body {
     margin-bottom: 4px;
 }
 
-/* Исходящие сообщения - светло-серые */
 .message-outgoing {
     justify-content: flex-end;
 }
@@ -114,7 +110,6 @@ body {
     margin-right: 12px;
 }
 
-/* Хвостик для исходящих сообщений - справа */
 .message-outgoing .message-bubble::after {
     content: '';
     position: absolute;
@@ -134,7 +129,6 @@ body {
     margin-bottom: 4px;
 }
 
-/* Основные стили облачка */
 .message-bubble {
     max-width: 65%;
     padding: 10px 14px;
@@ -190,20 +184,14 @@ body {
     flex-shrink: 0;
 }
 
-/*параметры сайд бара*/
 .chat-sidebar {
     width: 200px;
     flex-shrink: 0;
-    /*overflow: hidden;*/
 }
 
 .chat-sidebar .window {
     width: 270px;
     height: 400px;
-
-    /*min-height: 300px;*/
-    /*max-height: calc(100vh - 120px);*/
-    /*overflow-y: auto;*/
 }
 
 .chat-sidebar .window-body {
@@ -254,6 +242,13 @@ body {
     object-fit: cover;
 }
 
+.participant-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
 .participant-name {
     font-size: 11px;
     font-weight: bold;
@@ -262,11 +257,32 @@ body {
     max-width: 90px;
     word-break: break-word;
     font-family: 'MS Sans Serif', Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
 }
 
+.online-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #00aa00;
+    border: 1px solid;
+    border-color: #dfdfdf #0a0a0a #0a0a0a #dfdfdf;
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff;
+    flex-shrink: 0;
+}
 
+.typing-status {
+    display: block;
+    font-size: 9px;
+    color: #666;
+    font-style: italic;
+    margin-top: 2px;
+    min-height: 11px;
+}
 
-/* Кнопки редактирования и удаления сообщений */
 .msg-actions {
     display: none;
     gap: 6px;

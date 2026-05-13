@@ -1,5 +1,4 @@
 {% extends "old/base.html" %}
-
 {% block content %}
 
 <style>
@@ -19,7 +18,6 @@
         font-size: 18px !important;
     }
 
-    /* Search input area */
     .search-input-area {
         padding: 12px;
         background: #c0c0c0;
@@ -59,7 +57,6 @@
         font-size: 13px;
     }
 
-    /* Results area with dark green background */
     .search-results {
         flex: 1;
         overflow-y: auto;
@@ -69,65 +66,63 @@
         border: 2px solid;
         border-color: #dfdfdf #0a0a0a #0a0a0a #dfdfdf;
         box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff;
-        background: 
-            repeating-linear-gradient(
+        background: repeating-linear-gradient(
                 0deg,
                 rgba(0, 0, 0, 0.15) 0px,
                 rgba(0, 0, 0, 0.15) 1px,
                 transparent 1px,
                 transparent 2px
-            ),
-            repeating-linear-gradient(
+        ),
+        repeating-linear-gradient(
                 90deg,
                 rgba(0, 0, 0, 0.12) 0px,
                 rgba(0, 0, 0, 0.12) 1px,
                 transparent 1px,
                 transparent 2px
-            ),
-            repeating-linear-gradient(
+        ),
+        repeating-linear-gradient(
                 45deg,
                 rgba(255, 255, 255, 0.08) 0px,
                 rgba(255, 255, 255, 0.08) 2px,
                 transparent 2px,
                 transparent 4px
-            ),
-            repeating-linear-gradient(
+        ),
+        repeating-linear-gradient(
                 -45deg,
                 rgba(0, 0, 0, 0.1) 0px,
                 rgba(0, 0, 0, 0.1) 2px,
                 transparent 2px,
                 transparent 4px
-            ),
-            repeating-linear-gradient(
+        ),
+        repeating-linear-gradient(
                 0deg,
                 rgba(255, 255, 255, 0.05) 0px,
                 rgba(255, 255, 255, 0.05) 3px,
                 transparent 3px,
                 transparent 6px
-            ),
-            repeating-linear-gradient(
+        ),
+        repeating-linear-gradient(
                 90deg,
                 rgba(0, 0, 0, 0.08) 0px,
                 rgba(0, 0, 0, 0.08) 3px,
                 transparent 3px,
                 transparent 6px
-            ),
-            linear-gradient(
+        ),
+        linear-gradient(
                 135deg,
                 #0d2a0d 0%,
                 #1a3a1a 25%,
                 #0f3a0f 50%,
                 #1a3a1a 75%,
                 #0d2a0d 100%
-            );
-        background-size: 
-            100% 100%,
-            100% 100%,
-            100% 100%,
-            100% 100%,
-            100% 100%,
-            100% 100%,
-            400% 400%;
+        );
+        background-size: 100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        400% 400%;
         background-attachment: fixed;
     }
 
@@ -147,7 +142,6 @@
         font-family: 'MS Sans Serif', Arial, sans-serif;
     }
 
-    /* User result item */
     .user-result {
         display: flex;
         align-items: center;
@@ -238,10 +232,12 @@
                     <button aria-label="Close"></button>
                 </div>
             </div>
-            <div class="window-body" style="padding: 0; display: flex; flex-direction: column; max-height: calc(100vh - 180px);">
+            <div class="window-body"
+                 style="padding: 0; display: flex; flex-direction: column; max-height: calc(100vh - 180px);">
                 <div class="search-input-area">
                     <div class="search-input-wrapper">
-                        <input type="text" id="searchInput" class="search-input" placeholder="Введите username или имя..." autofocus>
+                        <input type="text" id="searchInput" class="search-input"
+                               placeholder="Введите username или имя..." autofocus>
                         <button id="searchBtn" class="btn search-btn">Найти</button>
                     </div>
                 </div>
