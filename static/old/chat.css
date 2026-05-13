@@ -1,10 +1,10 @@
 .chat-container {
     display: flex;
-    gap: 8px;
-    padding: 50px 30px 20px 30px;
-    justify-content: center;
+    gap: 15px;
+    padding: 50px 20px 20px 20px;
+    justify-content: flex-start;
     align-items: flex-start;
-    height: 100vh;
+    height: 150vh;
     overflow: hidden;
 }
 
@@ -14,7 +14,8 @@ body {
 
 .chat-main {
     flex: 1;
-    max-width: 800px;
+    min-width: 0;
+    max-width: 1000px;
 }
 
 .chat-main .window {
@@ -42,115 +43,117 @@ body {
 }
 
 
-/* Dark green chat area with ICQ-style appearance and strong noise texture */
+/* Dark green chat area with ICQ-style appearance and texture */
 .messages-list {
     flex: 1;
     overflow-y: auto;
     padding: 12px;
     margin-bottom: 0;
-    background: 
-        repeating-linear-gradient(
-            0deg,
-            rgba(0, 0, 0, 0.25) 0px,
-            rgba(0, 0, 0, 0.25) 1px,
-            transparent 1px,
-            transparent 2px
-        ),
-        repeating-linear-gradient(
-            90deg,
-            rgba(0, 0, 0, 0.2) 0px,
-            rgba(0, 0, 0, 0.2) 1px,
-            transparent 1px,
-            transparent 2px
-        ),
-        repeating-linear-gradient(
-            45deg,
-            rgba(255, 255, 255, 0.12) 0px,
-            rgba(255, 255, 255, 0.12) 2px,
-            transparent 2px,
-            transparent 4px
-        ),
-        repeating-linear-gradient(
-            -45deg,
-            rgba(0, 0, 0, 0.15) 0px,
-            rgba(0, 0, 0, 0.15) 2px,
-            transparent 2px,
-            transparent 4px
-        ),
-        repeating-linear-gradient(
-            0deg,
-            rgba(255, 255, 255, 0.08) 0px,
-            rgba(255, 255, 255, 0.08) 3px,
-            transparent 3px,
-            transparent 6px
-        ),
-        repeating-linear-gradient(
-            90deg,
-            rgba(0, 0, 0, 0.12) 0px,
-            rgba(0, 0, 0, 0.12) 3px,
-            transparent 3px,
-            transparent 6px
-        ),
-        repeating-linear-gradient(
-            0deg,
-            rgba(0, 100, 0, 0.08) 0px,
-            rgba(0, 100, 0, 0.08) 4px,
-            transparent 4px,
-            transparent 8px
-        ),
-        linear-gradient(
-            135deg,
-            #0d2a0d 0%,
-            #1a3a1a 25%,
-            #0f3a0f 50%,
-            #1a3a1a 75%,
-            #0d2a0d 100%
-        );
-    background-size: 
-        100% 100%,
-        100% 100%,
-        100% 100%,
-        100% 100%,
-        100% 100%,
-        100% 100%,
-        100% 100%,
-        400% 400%;
+    position: relative;
+    background: #081908 url('/static/old/1.png') repeat;
+    background-size: 200px 200px;
     border: 2px solid;
     border-color: #dfdfdf #0a0a0a #0a0a0a #dfdfdf;
     box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff;
+}
+
+.messages-list::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .message-item {
     margin-bottom: 12px;
     display: flex;
+    position: relative;
+    z-index: 1;
+}
+
+/* Входящие сообщения - светло-серые */
+.message-incoming {
+    justify-content: flex-start;
 }
 
 .message-incoming .message-bubble {
     background: #c0c0c0;
     color: #000000;
+    border: 2px solid;
     border-color: #dfdfdf #0a0a0a #0a0a0a #dfdfdf;
     box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff;
+    position: relative;
+    margin-left: 12px;
 }
 
-.message-outgoing .message-username {
-    color: #ffffff;
+/* Хвостик для входящих сообщений - слева */
+.message-incoming .message-bubble::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 12px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 6px 8px 6px 0;
+    border-color: transparent #c0c0c0 transparent transparent;
 }
 
-.message-bubble {
-    max-width: 65%;
-    padding: 10px 14px;
-    border: 2px solid;
-    word-wrap: break-word;
-    font-size: 14px;
-    font-family: 'MS Sans Serif', Arial, sans-serif;
-}
-
-.message-username {
+.message-incoming .message-username {
+    color: #000000;
     font-weight: bold;
     font-size: 12px;
     margin-bottom: 4px;
 }
 
+/* Исходящие сообщения - светло-серые */
+.message-outgoing {
+    justify-content: flex-end;
+}
+
+.message-outgoing .message-bubble {
+    background: #c0c0c0;
+    color: #000000;
+    border: 2px solid;
+    border-color: #dfdfdf #0a0a0a #0a0a0a #dfdfdf;
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff;
+    position: relative;
+    margin-right: 12px;
+}
+
+/* Хвостик для исходящих сообщений - справа */
+.message-outgoing .message-bubble::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 12px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 6px 0 6px 8px;
+    border-color: transparent transparent transparent #c0c0c0;
+}
+
+.message-outgoing .message-username {
+    color: #000000;
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+/* Основные стили облачка */
+.message-bubble {
+    max-width: 65%;
+    padding: 10px 14px;
+    word-wrap: break-word;
+    font-size: 14px;
+    font-family: 'MS Sans Serif', Arial, sans-serif;
+}
 
 .message-text {
     word-break: break-word;
@@ -160,7 +163,7 @@ body {
 
 .message-time {
     font-size: 11px;
-    opacity: 0.8;
+    opacity: 0.9;
     margin-top: 4px;
 }
 
@@ -203,61 +206,73 @@ body {
 .chat-sidebar {
     width: 200px;
     flex-shrink: 0;
-    overflow: hidden;
+    /*overflow: hidden;*/
 }
 
 .chat-sidebar .window {
-    max-height: calc(100vh - 180px);
-    overflow-y: auto;
+    width: 270px;
+    height: 400px;
+
+    /*min-height: 300px;*/
+    /*max-height: calc(100vh - 120px);*/
+    /*overflow-y: auto;*/
 }
 
-.profiles-container {
+.chat-sidebar .window-body {
+    padding: 0;
+}
+
+.participants-list {
     display: flex;
     flex-direction: column;
-    gap: 0;
-    padding: 0;
-    background: #c0c0c0;
+    gap: 15px;
+    padding: 10px;
+    align-items: center;
 }
 
-.profile-section {
+.participant-item {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 8px;
-    padding: 8px;
-    border-bottom: 1px solid #dfdfdf;
-    background: #c0c0c0;
+    padding: 0;
+    text-decoration: none;
+    color: #000;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: opacity 0.2s;
 }
 
-.profile-avatar {
-    width: 50px;
-    height: 50px;
+.participant-item:hover {
+    opacity: 0.8;
+}
+
+.participant-avatar {
+    width: 130px;
+    height: 130px;
     border: 2px solid;
     border-color: #dfdfdf #0a0a0a #0a0a0a #dfdfdf;
-    background: #ffffff;
+    background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 40px;
     flex-shrink: 0;
+    box-shadow: inset 1px 1px #ffffff, inset -1px -1px #0a0a0a;
 }
 
-.profile-info {
-    flex: 1;
-    min-width: 0;
-    overflow-wrap: break-word;
+.participant-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-.profile-name {
+.participant-name {
+    font-size: 11px;
     font-weight: bold;
-    font-size: 10px;
+    text-align: center;
+    color: #000;
+    max-width: 90px;
     word-break: break-word;
-    margin-bottom: 4px;
+    font-family: 'MS Sans Serif', Arial, sans-serif;
 }
 
-
-.profile-status {
-    font-size: 9px;
-    opacity: 0.7;
-}

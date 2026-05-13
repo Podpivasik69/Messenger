@@ -2,6 +2,7 @@
 {% block content %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='old/chat.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='old/98.css') }}">
 
 <div class="chat-container">
     <div class="chat-main">
@@ -39,35 +40,41 @@
         </div>
     </div>
 
-    <!--    <div class="chat-sidebar">-->
-    <!--        <div class="window">-->
-    <!--            <div class="title-bar">-->
-    <!--                <div class="title-bar-text">Участники</div>-->
-    <!--                <div class="title-bar-controls">-->
-    <!--                    <button aria-label="Close"></button>-->
-    <!--                </div>-->
-    <!--            </div>-->
-
-    <!--            <div class="window-body" style="padding: 0;">-->
-    <!--                <div class="profiles-container">-->
-    <!--                    <div class="profile-section">-->
-    <!--                        <div class="profile-avatar">👤</div>-->
-    <!--                        <div class="profile-info">-->
-    <!--                            <div class="profile-name">{{ current_user.username }}</div>-->
-    <!--                            <div class="profile-status">Online</div>-->
-    <!--                        </div>-->
-    <!--                    </div>-->
-    <!--                    <div class="profile-section">-->
-    <!--                        <div class="profile-avatar">👤</div>-->
-    <!--                        <div class="profile-info">-->
-    <!--                            <div class="profile-name">{{ user.username }}</div>-->
-    <!--                            <div class="profile-status">Online</div>-->
-    <!--                        </div>-->
-    <!--                    </div>-->
-    <!--                </div>-->
-    <!--            </div>-->
-    <!--        </div>-->
-    <!--    </div>-->
+    <div class="chat-sidebar">
+        <div class="window">
+            <div class="title-bar">
+                <div class="title-bar-text">Участники</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="participants-list">
+                    <a href="{{ url_for('profile', username=current_user.username) }}" class="participant-item">
+                        <div class="participant-avatar">
+                            {% if current_user.avatar %}
+                            <img src="{{ url_for('static', filename=current_user.avatar) }}"
+                                 alt="{{ current_user.username }}">
+                            {% else %}
+                            👤
+                            {% endif %}
+                        </div>
+                        <div class="participant-name">{{ current_user.username }}</div>
+                    </a>
+                    <a href="{{ url_for('profile', username=user.username) }}" class="participant-item">
+                        <div class="participant-avatar">
+                            {% if user.avatar %}
+                            <img src="{{ url_for('static', filename=user.avatar) }}" alt="{{ user.username }}">
+                            {% else %}
+                            👤
+                            {% endif %}
+                        </div>
+                        <div class="participant-name">{{ user.username }}</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
