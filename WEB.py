@@ -1,20 +1,40 @@
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_socketio import SocketIO, emit, join_room
+from data.communication_models import Chat, Message
+# from flask import render_styled, redirect
+from sqlalchemy.orm import joinedload
+from jinja2 import TemplateNotFound
+
 from flask import *
+from flask import make_response
 # from db import *
 from data import db_session
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from flask import render_template, redirect
+
 from forms.user import RegisterForm
 from forms.user import LoginForm
 from data.users import User
-from data.communication_models import Chat, Message
-from sqlalchemy.orm import joinedload
-from flask_socketio import SocketIO, emit, join_room
 
 website = Flask(__name__)
 socketio = SocketIO(website, cors_allowed_origins="*")
 website.config['SECRET_KEY'] = 'ваш-секретный-ключ-здесь'
 login_manager = LoginManager()
 login_manager.init_app(website)
+
+
+# штука которая ищет старый шаблон, если нет то грузит новый
+# теперь с куки
+def render_styled(template_name, **kwargs):
+    style = 'new'
+
+    if current_user.is_authenticated:
+        style = getattr(current_user, 'style', 'new')
+    else:
+        style = request.cookies.get('preferred_style', 'new')
+
+    try:
+        return render_template(f'{style}/{template_name}', **kwargs)
+    except TemplateNotFound:
+        return render_template(f'new/{template_name}', **kwargs)
 
 
 @website.route('/')
@@ -47,7 +67,7 @@ def home():
             'chat_id': chat.id
         })
     db_sess.close()
-    return render_template('home.html', chats=chats_data)
+    return render_styled('home.html', chats=chats_data)
 
 
 @website.route('/<username>')
@@ -62,7 +82,7 @@ def profile(username):
         return "Пользователь не найден", 404
 
     db_sess.close()
-    return render_template('profile.html', user=user)
+    return render_styled('profile.html', user=user)
 
 
 @website.route('/chat/<username>')
@@ -95,7 +115,7 @@ def chat(username):
                 'user_id': msg.user_id,
                 'edited': msg.edited,
             })
-        return render_template('chat.html', user=user, messages=messages_data, chat_id=chat.id)
+        return render_styled('chat.html', user=user, messages=messages_data, chat_id=chat.id)
 
 
     finally:
@@ -153,9 +173,6 @@ def create_chat(username):
             print(f"Чат уже существует, перенаправляю на /chat/{username}")
             return redirect(f'/chat/{username}')
 
-        if existing_chat:
-            return redirect(f'/chat/{username}')
-
         chat = Chat(
             user1_id=current_user.id,
             user2_id=companion.id,
@@ -194,13 +211,13 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         if form.password.data != form.password_confirm.data:
-            return render_template('register.html',
-                                   title='Регистрация', form=form, message='пороли не совпадают')
+            return render_styled('register.html',
+                                 title='Регистрация', form=form, message='пороли не совпадают')
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.username == form.username.data).first():
-            return render_template('register.html',
-                                   title='Регистрация', form=form,
-                                   message='ПОльзователь с таким именнем уже существуеи')
+            return render_styled('register.html',
+                                 title='Регистрация', form=form,
+                                 message='ПОльзователь с таким именнем уже существуеи')
         user = User()
         user.username = form.username.data
         user.name = form.name.data
@@ -210,7 +227,7 @@ def register():
         db_sess.commit()
         return redirect('/login')
 
-    return render_template('register.html', title='Регистрация', form=form)
+    return render_styled('register.html', title='Регистрация', form=form)
 
 
 @website.route('/login', methods=['GET', 'POST'])
@@ -222,24 +239,28 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             return redirect("/home")
-        return render_template('login.html',
-                               message="Неправильный логин или пароль",
-                               form=form)
+        return render_styled('login.html',
+                             message="Неправильный логин или пароль",
+                             form=form)
 
-    return render_template('login.html', title='Авторизация', form=form)
+    return render_styled('login.html', title='Авторизация', form=form)
 
 
+# теперь с куки, сохраняет выбранный стиль
 @website.route('/logout')
 @login_required
 def logout():
+    style = current_user.style or 'new'
     logout_user()
-    return redirect('/login')
+    response = make_response(redirect('/login'))
+    response.set_cookie('preferred_style', style, max_age=31536000)  # 1 год
+    return response
 
 
 @website.route('/search')
 @login_required
 def search_page():
-    return render_template('search.html')
+    return render_styled('search.html')
 
 
 # веб сокет
@@ -390,3 +411,62 @@ def handle_delete_message(data):
             'chat_id': chat_id
         }, room=f'chat_{chat_id}')
     db_sess.close()
+
+
+# шаблны
+@website.context_processor
+def inject_style():
+    style = 'new'
+    if current_user.is_authenticated:
+        style = current_user.style or 'new'
+    return {'current_style': style}
+
+
+@website.route('/set_style', methods=['POST'])
+@login_required
+def set_style():
+    new_style = request.form.get('style', 'new')
+    if new_style in ('new', 'old'):
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(current_user.id)
+        user.style = new_style
+        db_sess.commit()
+        db_sess.close()
+
+        # сохранение запроса в куки
+        response = make_response(redirect(request.referrer or '/home'))
+        response.set_cookie('preferred_style', new_style, max_age=31536000)
+        return response
+    return redirect(request.referrer or '/home')
+
+
+# аватарка
+@website.route('/upload_avatar', methods=['POST'])
+@login_required
+def upload_avatar():
+    file = request.files.get('avatar')
+    if not file or not file.filename:
+        return redirect('/' + current_user.username)
+
+    file.seek(0, 2)
+    size = file.tell()
+    file.seek(0)
+    if size > 10 * 1024 * 1024:
+        return "ДА Че ты грузишь мне тут. принимаю не больше — 10 МБ.", 413
+
+    import os, uuid
+    avatars_dir = 'static/avatars'
+    os.makedirs(avatars_dir, exist_ok=True)
+
+    ext = file.filename.rsplit('.', 1)[-1].lower()
+    filename = f"user_{current_user.id}_{uuid.uuid4().hex[:8]}.{ext}"
+    filepath = os.path.join(avatars_dir, filename)
+    file.save(filepath)
+
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).get(current_user.id)
+    user.avatar = f"avatars/{filename}"
+    db_sess.commit()
+    db_sess.close()
+
+    return redirect('/' + current_user.username)

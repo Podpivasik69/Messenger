@@ -1,0 +1,245 @@
+{% extends "old/base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='old/chat.css') }}">
+
+<div class="chat-container">
+    <div class="chat-main">
+        <div class="window">
+            <div class="title-bar">
+                <div class="title-bar-text">Чат с {{ user.username }}</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body">
+                <input type="hidden" id="chat_id" value="{{ chat_id }}">
+                <input type="hidden" id="current_user_id" value="{{ current_user.id }}">
+
+                <div class="sunken-panel messages-list" id="messages-container">
+                    {% for mess in messages %}
+                    <div class="message-item {% if mess.user_id == user.id %}message-incoming{% else %}message-outgoing{% endif %}"
+                         data-message-id="{{ mess.id }}">
+                        <div class="message-bubble">
+                            <div class="message-username">{{ mess.username }}</div>
+                            <div class="message-text">{{ mess.text }}</div>
+                            <div class="message-time">{{ mess.created_date }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <!-- печатник -->
+                <div id="typingIndicator"
+                     style="display:none; padding:4px 10px; font-size:0.9rem; color:#888; font-style:italic;"></div>
+                <div class="input-area">
+                    <textarea class="message-input" id="message-input" placeholder="Введите сообщение..."></textarea>
+                    <button class="btn send-btn" id="send-button">Отправить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--    <div class="chat-sidebar">-->
+    <!--        <div class="window">-->
+    <!--            <div class="title-bar">-->
+    <!--                <div class="title-bar-text">Участники</div>-->
+    <!--                <div class="title-bar-controls">-->
+    <!--                    <button aria-label="Close"></button>-->
+    <!--                </div>-->
+    <!--            </div>-->
+
+    <!--            <div class="window-body" style="padding: 0;">-->
+    <!--                <div class="profiles-container">-->
+    <!--                    <div class="profile-section">-->
+    <!--                        <div class="profile-avatar">👤</div>-->
+    <!--                        <div class="profile-info">-->
+    <!--                            <div class="profile-name">{{ current_user.username }}</div>-->
+    <!--                            <div class="profile-status">Online</div>-->
+    <!--                        </div>-->
+    <!--                    </div>-->
+    <!--                    <div class="profile-section">-->
+    <!--                        <div class="profile-avatar">👤</div>-->
+    <!--                        <div class="profile-info">-->
+    <!--                            <div class="profile-name">{{ user.username }}</div>-->
+    <!--                            <div class="profile-status">Online</div>-->
+    <!--                        </div>-->
+    <!--                    </div>-->
+    <!--                </div>-->
+    <!--            </div>-->
+    <!--        </div>-->
+    <!--    </div>-->
+</div>
+
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<script>
+    let typingTimer;
+    const typingIndicator = document.getElementById('typingIndicator');
+    const socket = io();
+    const chatId = document.getElementById('chat_id').value;
+    const currentUserId = parseInt(document.getElementById('current_user_id').value);
+    const messagesDiv = document.getElementById('messages-container');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+
+    socket.on('connect', () => {
+        console.log('✓ Подключено к WebSocket');
+        socket.emit('join', {chat_id: chatId});
+    });
+
+
+    messageInput.addEventListener('input', () => {
+        socket.emit('typing_start', {chat_id: chatId});
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            socket.emit('typing_stop', {chat_id: chatId});
+        }, 2000);
+    });
+
+    socket.emit('join', {chat_id: chatId});
+
+    function renderMessage(data) {
+        const isMy = data.user_id === currentUserId;
+        const cls = isMy ? 'message-outgoing' : 'message-incoming';
+        const actions = isMy ? `<div class="msg-actions">
+        <button type="button" class="btn-edit-msg" title="Редактировать">✎</button>
+        <button type="button" class="btn-delete-msg" title="Удалить">✕</button>
+    </div>` : '';
+        const editedMark = data.edited ? '<small class="edited-mark">(ред.)</small>' : '';
+        return `
+        <div class="message-item ${cls}" data-message-id="${data.message_id}">
+            <div class="message-bubble">
+                <div class="message-username">${data.username}</div>
+                <div class="message-text">${data.text}</div>
+                ${editedMark}
+                <div class="message-time">${data.created_date}</div>
+                ${actions}
+            </div>
+        </div>
+    `;
+    }
+
+    socket.on('new_message', (data) => {
+        const msgHTML = renderMessage(data);
+        messagesDiv.insertAdjacentHTML('beforeend', msgHTML);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    function sendMessage() {
+        const text = messageInput.value.trim();
+        if (text) {
+            socket.emit('send_message', {chat_id: chatId, text: text});
+            socket.emit('typing_stop', {chat_id: chatId});
+            clearTimeout(typingTimer);
+            messageInput.value = '';
+            messageInput.focus();
+        }
+    }
+
+    sendButton.addEventListener('click', sendMessage);
+
+    messageInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    messagesDiv.addEventListener('click', (e) => {
+        const target = e.target;
+        const msgDiv = target.closest('[data-message-id]');
+        if (!msgDiv) return;
+        const messageId = msgDiv.dataset.messageId;
+
+        const deleteBtn = target.closest('.btn-delete-msg');
+        if (deleteBtn) {
+            if (confirm('Удалить сообщение?')) {
+                socket.emit('delete_message', {
+                    message_id: messageId,
+                    chat_id: chatId
+                });
+            }
+            return;
+        }
+
+        const editBtn = target.closest('.btn-edit-msg');
+        if (editBtn) {
+            const textSpan = msgDiv.querySelector('.message-text');
+            const originalText = textSpan.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = originalText;
+            input.style.width = '80%';
+            textSpan.replaceWith(input);
+            input.focus();
+
+            const saveEdit = () => {
+                const newText = input.value.trim();
+                if (newText && newText !== originalText) {
+                    socket.emit('edit_message', {
+                        message_id: messageId,
+                        chat_id: chatId,
+                        text: newText
+                    });
+                } else {
+                    input.replaceWith(textSpan);
+                }
+            };
+
+            input.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter') {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    saveEdit();
+                } else if (ev.key === 'Escape') {
+                    input.replaceWith(textSpan);
+                }
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (document.body.contains(input)) {
+                        saveEdit();
+                    }
+                }, 100);
+            });
+        }
+    });
+
+    // Индикатор печати
+    socket.on('user_typing', (data) => {
+        if (data.chat_id === chatId) {
+            typingIndicator.textContent = data.username + ' печатает...';
+            typingIndicator.style.display = 'block';
+        }
+    });
+    socket.on('user_stop_typing', (data) => {
+        if (data.chat_id === chatId) {
+            typingIndicator.textContent = '';
+            typingIndicator.style.display = 'none';
+        }
+    });
+
+    // Редактирование
+    socket.on('message_edited', (data) => {
+        const msgDiv = document.querySelector(`[data-message-id="${data.message_id}"]`);
+        if (msgDiv) {
+            const textSpan = msgDiv.querySelector('.message-text');
+            if (textSpan) textSpan.textContent = data.text;
+            if (!msgDiv.querySelector('.edited-mark')) {
+                const mark = document.createElement('small');
+                mark.className = 'edited-mark';
+                mark.textContent = ' (ред.)';
+                textSpan.after(mark);
+            }
+        }
+    });
+
+    // Удаление
+    socket.on('message_deleted', (data) => {
+        const msgDiv = document.querySelector(`[data-message-id="${data.message_id}"]`);
+        if (msgDiv) msgDiv.remove();
+    });
+
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+</script>
+{% endblock %}

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "new/base.html" %}
 
 {% block content %}
 <h1>Чат с {{ user.username }}</h1>
@@ -39,24 +39,7 @@
     <button type="submit">Отправить</button>
 </form>
 <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
-<!--<script>-->
-<!--    window.onload = function () {-->
-<!--        var messages = document.querySelector('.messages');-->
-<!--        if (messages) {-->
-<!--            messages.scrollTop = messages.scrollHeight;-->
-<!--        }-->
-<!--    };-->
-<!--</script>-->
 
-<!--<script>-->
-<!--    var textarea = document.querySelector('textarea[name="message"]');-->
-<!--    textarea.addEventListener('keydown', function (e) {-->
-<!--        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {-->
-<!--            e.preventDefault();-->
-<!--            this.form.submit();-->
-<!--        }-->
-<!--    });-->
-<!--</script>-->
 
 <script>
     let typingTimer;
@@ -132,55 +115,7 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     };
 
-    // messagesDiv.addEventListener('click', (e) => {
-    //     const target = e.target;
-    //     const msgDiv = target.closest('[data-message-id]');
-    //     if (!msgDiv) return;
-    //     const messageId = msgDiv.dataset.messageId;
-    //
-    //     if (target.classList.contains('btn-delete-msg')) {
-    //         if (confirm('Удалить сообщение?')) {
-    //             socket.emit('delete_message', {
-    //                 message_id: messageId,
-    //                 chat_id: chatId
-    //             });
-    //         }
-    //     }
-    //
-    //     // кнопки редактирования и удаления
-    //
-    //     if (target.classList.contains('btn-edit-msg')) {
-    //         const textSpan = msgDiv.querySelector('.message-text');
-    //         const originalText = textSpan.textContent;
-    //         const input = document.createElement('input');
-    //         input.type = 'text';
-    //         input.value = originalText;
-    //         input.style.width = '80%';
-    //         textSpan.replaceWith(input);
-    //         input.focus();
-    //
-    //         const saveEdit = () => {
-    //             const newText = input.value.trim();
-    //             if (newText && newText !== originalText) {
-    //                 socket.emit('edit_message', {
-    //                     message_id: messageId,
-    //                     chat_id: chatId,
-    //                     text: newText
-    //                 });
-    //             } else {
-    //                 input.replaceWith(textSpan);
-    //             }
-    //         };
-    //
-    //         input.addEventListener('keydown', (ev) => {
-    //             if (ev.key === 'Enter') saveEdit();
-    //             else if (ev.key === 'Escape') input.replaceWith(textSpan);
-    //         });
-    //         input.addEventListener('blur', saveEdit);
-    //     }
-    // });
-
-
+    // кнопки редактирования и удаления
     messagesDiv.addEventListener('click', (e) => {
         const target = e.target;
         const msgDiv = target.closest('[data-message-id]');
