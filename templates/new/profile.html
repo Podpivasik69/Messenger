@@ -4,7 +4,11 @@
 <div class="profile-container">
     <div class="profile-header">
         <div class="profile-avatar">
+            {% if user.avatar %}
+            <img src="{{ url_for('static', filename=user.avatar) }}" alt="Аватар">
+            {% else %}
             <span class="avatar-text">{{ user.name[0] | upper }}</span>
+            {% endif %}
         </div>
         <div class="profile-info">
             <h1 class="profile-name">{{ user.name }}</h1>
@@ -29,6 +33,14 @@
 
     <div class="profile-actions">
         {% if user.id == current_user.id %}
+        <!-- Загрузка аватарки -->
+        <form method="post" action="/upload_avatar" enctype="multipart/form-data">
+            <button type="button" class="btn-edit-profile" onclick="document.getElementById('avatarInput').click()">
+                📷 Загрузить фото
+            </button>
+            <input type="file" id="avatarInput" name="avatar" accept="image/*" onchange="this.form.submit()" style="display: none;">
+        </form>
+
         <button class="btn-edit-profile" id="editProfileBtn">✎ Редактировать профиль</button>
         <a href="/logout" class="btn-logout">Выйти</a>
         {% else %}
@@ -36,7 +48,8 @@
             ✉ Написать сообщение
         </a>
         {% endif %}
-<!--        кнопка смены стиля-->
+
+        <!-- кнопка смены стиля -->
         {% if user.id == current_user.id %}
         <form method="post" action="/set_style" style="display:inline;">
             <input type="hidden" name="style" value="{{ 'old' if current_style == 'new' else 'new' }}">
@@ -45,12 +58,10 @@
             </button>
         </form>
         {% endif %}
-
     </div>
 </div>
 
-<!--модалка редактиравания профиля-->
-
+<!-- модалка редактирования профиля -->
 <div id="editProfileModal" class="modal">
     <div class="modal-content">
         <span class="close-modal">&times;</span>
@@ -67,94 +78,22 @@
     </div>
 </div>
 
-<style>
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.5);
-    }
-
-    .modal-content {
-        background-color: #fff;
-        margin: 10% auto;
-        padding: 25px;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 420px;
-        position: relative;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .close-modal {
-        position: absolute;
-        right: 15px;
-        top: 10px;
-        font-size: 28px;
-        cursor: pointer;
-        color: #888;
-    }
-
-    .close-modal:hover {
-        color: #333;
-    }
-
-    .modal-content h2 {
-        margin-top: 0;
-        font-size: 1.4rem;
-    }
-
-    .modal-content label {
-        display: block;
-        margin-top: 12px;
-        font-weight: 500;
-    }
-
-    .modal-content input,
-    .modal-content textarea {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-family: inherit;
-        font-size: 0.95rem;
-        margin-top: 4px;
-        box-sizing: border-box;
-    }
-
-    .btn-save {
-        margin-top: 18px;
-        padding: 10px 20px;
-        background: #4a76a8;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 1rem;
-    }
-
-    .btn-save:hover {
-        background: #3a5f8a;
-    }
-</style>
-
 <script>
     const modal = document.getElementById('editProfileModal');
     const btn = document.getElementById('editProfileBtn');
     const closeBtn = document.querySelector('.close-modal');
 
-    btn.addEventListener('click', () => {
-        modal.style.display = 'block';
-    });
+    if (btn) {
+        btn.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+    }
 
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
 
     window.addEventListener('click', (e) => {
         if (e.target == modal) {

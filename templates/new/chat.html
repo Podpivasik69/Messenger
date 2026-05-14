@@ -1,43 +1,84 @@
 {% extends "new/base.html" %}
 
 {% block content %}
-<h1>Чат с {{ user.username }}</h1>
+<div class="chat-wrapper">
+    <div class="chat-main">
+        <h1>Чат с {{ user.username }}</h1>
 
-<div class="messages">
-
-    {% for mess in messages %}
-    <div class="{{ 'mess_incoming' if mess.user_id == user.id else 'mess_outcoming' }}"
-         data-message-id="{{ mess.id }}">
-        <small style="color: {{ '#5a9bd4' if mess.user_id == user.id else '#1a1a1a' }}; font-weight: 500;">
-            {{ mess.username }}
-        </small>
-        <span class="message-text">{{ mess.text }}</span>
-        {% if mess.edited %}<small class="edited-mark">(ред.)</small>{% endif %}
-        <br>
-        <small class="message-date">{{ mess.created_date }}</small>
-        {% if mess.user_id == current_user.id %}
-        <div class="msg-actions">
-            <button type="button" class="btn-edit-msg" title="Редактировать">✎</button>
-            <button type="button" class="btn-delete-msg" title="Удалить">✕</button>
+        <div class="messages">
+            {% for mess in messages %}
+            <div class="{{ 'mess_incoming' if mess.user_id == user.id else 'mess_outcoming' }}"
+                 data-message-id="{{ mess.id }}">
+                <small style="color: {{ '#5a9bd4' if mess.user_id == user.id else '#1a1a1a' }}; font-weight: 500;">
+                    {{ mess.username }}
+                </small>
+                <span class="message-text">{{ mess.text }}</span>
+                {% if mess.edited %}<small class="edited-mark">(ред.)</small>{% endif %}
+                <br>
+                <small class="message-date">{{ mess.created_date }}</small>
+                {% if mess.user_id == current_user.id %}
+                <div class="msg-actions">
+                    <button type="button" class="btn-edit-msg" title="Редактировать">✎</button>
+                    <button type="button" class="btn-delete-msg" title="Удалить">✕</button>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
         </div>
-        {% endif %}
+
+        <input type="hidden" id="chat_id" value="{{ chat_id }}">
+        <input type="hidden" id="current_user_id" value="{{ current_user.id }}">
+
+        <div id="bottom"></div>
+
+        <div id="typingIndicator"
+             style="display:none; padding:4px 10px; font-size:0.9rem; color:#888; font-style:italic;"></div>
+
+        <form method="post" action="/send_mess/{{ user.username }}">
+            <textarea name="message" placeholder="Напечатай что-нибудь..." autofocus rows="1"></textarea>
+            <button type="submit">Отправить</button>
+        </form>
     </div>
-    {% endfor %}
+
+    <div class="chat-sidebar">
+        <h2>Участники</h2>
+        <div class="participants-list">
+            <a href="/{{ current_user.username }}" class="participant-item" data-username="{{ current_user.username }}">
+                <div class="participant-avatar">
+                    {% if current_user.avatar %}
+                    <img src="{{ url_for('static', filename=current_user.avatar) }}" alt="{{ current_user.username }}">
+                    {% else %}
+                    <span class="avatar-placeholder">{{ current_user.name[0] | upper }}</span>
+                    {% endif %}
+                </div>
+                <div class="participant-info">
+                    <div class="participant-name">
+                        <span class="online-indicator"></span>
+                        {{ current_user.username }}
+                    </div>
+                    <span class="typing-status"></span>
+                </div>
+            </a>
+            <a href="/{{ user.username }}" class="participant-item" data-username="{{ user.username }}">
+                <div class="participant-avatar">
+                    {% if user.avatar %}
+                    <img src="{{ url_for('static', filename=user.avatar) }}" alt="{{ user.username }}">
+                    {% else %}
+                    <span class="avatar-placeholder">{{ user.name[0] | upper }}</span>
+                    {% endif %}
+                </div>
+                <div class="participant-info">
+                    <div class="participant-name">
+                        <span class="online-indicator"></span>
+                        {{ user.username }}
+                    </div>
+                    <span class="typing-status"></span>
+                </div>
+            </a>
+        </div>
+    </div>
 </div>
 
-<input type="hidden" id="chat_id" value="{{ chat_id }}">
-<input type="hidden" id="current_user_id" value="{{ current_user.id }}">
-
-<div id="bottom"></div>
-
-<!--шляпа статуса печатника -->
-<div id="typingIndicator"
-     style="display:none; padding:4px 10px; font-size:0.9rem; color:#888; font-style:italic;"></div>
-
-<form method="post" action="/send_mess/{{ user.username }}">
-    <textarea name="message" placeholder="Напечатай что-нибудь..." autofocus rows="1"></textarea>
-    <button type="submit">Отправить</button>
-</form>
 <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
 
 
