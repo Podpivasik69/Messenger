@@ -294,6 +294,9 @@ def handle_send_message(data):
     db_sess.add(msg)
     db_sess.commit()
 
+    user1_id = chat.user1_id
+    user2_id = chat.user2_id
+
     emit('new_message', {
         'message_id': msg.id,
         'text': msg.text,
@@ -309,14 +312,14 @@ def handle_send_message(data):
         'text': msg.text,
         'username': current_user.username,
         'timestamp': msg.created_date.strftime('%m-%d | %H:%M:%S')
-    }, room=f'user_{chat.user1_id}')
+    }, room=f'user_{user1_id}')
 
     socketio.emit('update_last_message', {
         'chat_id': chat_id,
         'text': msg.text,
         'username': current_user.username,
         'timestamp': msg.created_date.strftime('%m-%d | %H:%M:%S')
-    }, room=f'user_{chat.user2_id}')
+    }, room=f'user_{user2_id}')
 
 
 # хуйня чторбы редактировать профиль

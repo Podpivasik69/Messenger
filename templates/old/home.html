@@ -1,80 +1,81 @@
 {% extends "old/base.html" %}
 {% block content %}
 
-<style>
+    <style>
 
-</style>
+    </style>
 
-<div class="home-container">
-    <div class="home-main">
-        <div class="window">
-            <div class="title-bar">
-                <div class="title-bar-text">Мои чаты</div>
-                <div class="title-bar-controls">
-                    <button aria-label="Close"></button>
+    <div class="home-container">
+        <div class="home-main">
+            <div class="window">
+                <div class="title-bar">
+                    <div class="title-bar-text">Мои чаты</div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Close"></button>
+                    </div>
                 </div>
-            </div>
-            <div class="window-body" style="padding: 0; display: flex; flex-direction: column; height: 400px;">
-                <input type="hidden" id="current_user_id" value="{{ current_user.id }}">
+                <div class="window-body" style="padding: 0; display: flex; flex-direction: column; height: 400px;">
+                    <input type="hidden" id="current_user_id" value="{{ current_user.id }}">
 
-                <div class="sunken-panel chats-list" id="chats-container">
-                    {% if chats %}
-                    {% for chat in chats %}
-                    <div class="chat-item" data-chat-id="{{ chat.chat_id }}"
-                         onclick="location.href='/chat/{{ chat.username }}'">
-                        <div class="chat-item-header">
-                            <div class="chat-avatar">👤</div>
-                            <div class="chat-info">
-                                <div class="chat-name">{{ chat.name }}</div>
-                                <div class="chat-username">@{{ chat.username }}</div>
+                    <div class="sunken-panel chats-list" id="chats-container">
+                        {% if chats %}
+                            {% for chat in chats %}
+                                <div class="chat-item" data-chat-id="{{ chat.chat_id }}"
+                                     onclick="location.href='/chat/{{ chat.username }}'">
+                                    <div class="chat-item-header">
+                                        <div class="chat-avatar">👤</div>
+                                        <div class="chat-info">
+                                            <div class="chat-name">{{ chat.name }}</div>
+                                            <div class="chat-username">@{{ chat.username }}</div>
+                                        </div>
+                                    </div>
+                                    {% if chat.last_message %}
+                                        <div class="chat-last-msg">
+                                            {{ chat.last_message[:40] }}{% if chat.last_message|length > 40 %}
+                                                ...{% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <div>
+                                    <div style="font-size: 20px; margin-bottom: 8px;">📭</div>
+                                    <div>Нет активных чатов</div>
+                                    <div style="font-size: 9px; margin-top: 4px;">Начните новый чат через поиск</div>
+                                </div>
                             </div>
-                        </div>
-                        {% if chat.last_message %}
-                        <div class="chat-last-msg">{{ chat.last_message[:40] }}{% if chat.last_message|length > 40
-                            %}...{% endif %}
-                        </div>
                         {% endif %}
                     </div>
-                    {% endfor %}
-                    {% else %}
-                    <div class="empty-state">
-                        <div>
-                            <div style="font-size: 20px; margin-bottom: 8px;">📭</div>
-                            <div>Нет активных чатов</div>
-                            <div style="font-size: 9px; margin-top: 4px;">Начните новый чат через поиск</div>
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
+
+
     </div>
 
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        const currentUserId = document.getElementById('current_user_id').value;
+        const chatsContainer = document.getElementById('chats-container');
 
-</div>
+        socket.on('new_chat', (data) => {
+            const emptyState = chatsContainer.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
 
-<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
-<script>
-    const socket = io();
-    const currentUserId = document.getElementById('current_user_id').value;
-    const chatsContainer = document.getElementById('chats-container');
+            const chatDiv = document.createElement('div');
+            chatDiv.className = 'chat-item';
+            chatDiv.setAttribute('data-chat-id', data.chat_id);
+            chatDiv.onclick = function () {
+                location.href = `/chat/${data.username}`;
+            };
 
-    socket.on('new_chat', (data) => {
-        const emptyState = chatsContainer.querySelector('.empty-state');
-        if (emptyState) {
-            emptyState.remove();
-        }
+            const lastMsgText = data.last_message ? data.last_message.substring(0, 40) + (data.last_message.length > 40 ? '...' : '') : '';
 
-        const chatDiv = document.createElement('div');
-        chatDiv.className = 'chat-item';
-        chatDiv.setAttribute('data-chat-id', data.chat_id);
-        chatDiv.onclick = function () {
-            location.href = `/chat/${data.username}`;
-        };
-
-        const lastMsgText = data.last_message ? data.last_message.substring(0, 40) + (data.last_message.length > 40 ? '...' : '') : '';
-
-        chatDiv.innerHTML = `
+            chatDiv.innerHTML = `
             <div class="chat-item-header">
                 <div class="chat-avatar">👤</div>
                 <div class="chat-info">
@@ -85,32 +86,33 @@
             ${lastMsgText ? `<div class="chat-last-msg">${lastMsgText}</div>` : ''}
         `;
 
-        if (chatsContainer.firstChild) {
-            chatsContainer.insertBefore(chatDiv, chatsContainer.firstChild);
-        } else {
-            chatsContainer.appendChild(chatDiv);
-        }
-    });
-
-    socket.on('update_last_message', (data) => {
-        const chatElem = document.querySelector(`.chat-item[data-chat-id="${data.chat_id}"]`);
-        if (chatElem) {
-            let lastMsgElem = chatElem.querySelector('.chat-last-msg');
-            const truncated = data.text.substring(0, 40) + (data.text.length > 40 ? '...' : '');
-
-            if (lastMsgElem) {
-                lastMsgElem.textContent = truncated;
+            if (chatsContainer.firstChild) {
+                chatsContainer.insertBefore(chatDiv, chatsContainer.firstChild);
             } else {
-                const newMsgDiv = document.createElement('div');
-                newMsgDiv.className = 'chat-last-msg';
-                newMsgDiv.textContent = truncated;
-                chatElem.appendChild(newMsgDiv);
+                chatsContainer.appendChild(chatDiv);
             }
+        });
 
-            const parent = chatElem.parentNode;
-            parent.insertBefore(chatElem, parent.firstChild);
-        }
-    });
-</script>
+        socket.on('update_last_message', (data) => {
+            {#console.log('update_last_message received:', data);#}
+            const chatElem = document.querySelector(`.chat-item[data-chat-id="${data.chat_id}"]`);
+            if (chatElem) {
+                let lastMsgElem = chatElem.querySelector('.chat-last-msg');
+                const truncated = data.text.substring(0, 40) + (data.text.length > 40 ? '...' : '');
+
+                if (lastMsgElem) {
+                    lastMsgElem.textContent = truncated;
+                } else {
+                    const newMsgDiv = document.createElement('div');
+                    newMsgDiv.className = 'chat-last-msg';
+                    newMsgDiv.textContent = truncated;
+                    chatElem.appendChild(newMsgDiv);
+                }
+
+                const parent = chatElem.parentNode;
+                parent.insertBefore(chatElem, parent.firstChild);
+            }
+        });
+    </script>
 
 {% endblock %}
