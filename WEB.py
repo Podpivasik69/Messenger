@@ -24,12 +24,10 @@ login_manager.init_app(website)
 # штука которая ищет старый шаблон, если нет то грузит новый
 # теперь с куки
 def render_styled(template_name, **kwargs):
-    style = 'new'
-
     if current_user.is_authenticated:
-        style = getattr(current_user, 'style', 'new')
+        style = current_user.style or 'new'
     else:
-        style = request.cookies.get('preferred_style', 'new')
+        style = 'old'
 
     try:
         return render_template(f'{style}/{template_name}', **kwargs)
@@ -416,9 +414,10 @@ def handle_delete_message(data):
 # шаблны
 @website.context_processor
 def inject_style():
-    style = 'new'
     if current_user.is_authenticated:
         style = current_user.style or 'new'
+    else:
+        style = 'old'
     return {'current_style': style}
 
 
